@@ -1,0 +1,389 @@
+[
+    {
+        "ranking": 1,
+        "point": 621845003,
+        "budokai_rank": 12,
+        "title_num": 588,
+        "continuous_title_num_max": 588,
+        "id": 2287917656,
+        "name": "Lotad",
+        "leader": {
+            "id": 1634111863,
+            "card_id": 1026561,
+            "exp": 5000000,
+            "skill_lv": 10,
+            "awakening_route_id": 5500,
+            "is_favorite": true,
+            "is_released_potential": true,
+            "released_rate": 100,
+            "optimal_awakening_step": null,
+            "awakenings": [],
+            "unlocked_square_statuses": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "created_at": 1719711945,
+            "card_decoration_id": 413,
+            "exchangeable_item_id": 1,
+            "potential_parameters": [
+                {
+                    "parameter_type": "Atk",
+                    "parameter_id": null,
+                    "total_value": 5000
+                },
+                {
+                    "parameter_type": "Defense",
+                    "parameter_id": null,
+                    "total_value": 5000
+                },
+                {
+                    "parameter_type": "Hp",
+                    "parameter_id": null,
+                    "total_value": 5000
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 3,
+                    "total_value": 5
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 6,
+                    "total_value": 10
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 4,
+                    "total_value": 15
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 7,
+                    "total_value": 10
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 5,
+                    "total_value": 15
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 2,
+                    "total_value": 15
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 1,
+                    "total_value": 6
+                }
+            ],
+            "equipment_skill_items": [
+                {
+                    "grade": "bronze",
+                    "slot": 0,
+                    "equipment_skill_item_id": 105
+                },
+                {
+                    "grade": "silver",
+                    "slot": 0,
+                    "equipment_skill_item_id": 2067
+                },
+                {
+                    "grade": "gold",
+                    "slot": 0,
+                    "equipment_skill_item_id": 344
+                }
+            ],
+            "link_skill_lvs": [
+                {
+                    "id": 50,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 52,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 86,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 90,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 102,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 109,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 123,
+                    "skill_lv": 10
+                }
+            ]
+        }
+    },
+    {
+        "ranking": 2,
+        "point": 604355728,
+        "budokai_rank": 12,
+        "title_num": 570,
+        "continuous_title_num_max": 570,
+        "id": 853840470,
+        "name": "Discord",
+        "leader": {
+            "id": 1632602164,
+            "card_id": 1026561,
+            "exp": 5000000,
+            "skill_lv": 10,
+            "awakening_route_id": 5500,
+            "is_favorite": true,
+            "is_released_potential": true,
+            "released_rate": 100,
+            "optimal_awakening_step": null,
+            "awakenings": [],
+            "unlocked_square_statuses": [
+                0,
+                0,
+                0,
+                0
+            ],
+            "created_at": 1719711945,
+            "card_decoration_id": null,
+            "exchangeable_item_id": null,
+            "potential_parameters": [
+                {
+                    "parameter_type": "Atk",
+                    "parameter_id": null,
+                    "total_value": 5000
+                },
+                {
+                    "parameter_type": "Defense",
+                    "parameter_id": null,
+                    "total_value": 5000
+                },
+                {
+                    "parameter_type": "Hp",
+                    "parameter_id": null,
+                    "total_value": 5000
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 3,
+                    "total_value": 5
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 6,
+                    "total_value": 15
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 4,
+                    "total_value": 10
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 7,
+                    "total_value": 15
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 5,
+                    "total_value": 10
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 2,
+                    "total_value": 15
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 1,
+                    "total_value": 6
+                }
+            ],
+            "equipment_skill_items": [
+                {
+                    "grade": "silver",
+                    "slot": 0,
+                    "equipment_skill_item_id": 1622
+                },
+                {
+                    "grade": "bronze",
+                    "slot": 0,
+                    "equipment_skill_item_id": 2214
+                },
+                {
+                    "grade": "gold",
+                    "slot": 0,
+                    "equipment_skill_item_id": 3033
+                }
+            ],
+            "link_skill_lvs": [
+                {
+                    "id": 50,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 52,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 86,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 90,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 102,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 109,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 123,
+                    "skill_lv": 10
+                }
+            ]
+        }
+    },
+    {
+        "ranking": 3,
+        "point": 573965685,
+        "budokai_rank": 12,
+        "title_num": 545,
+        "continuous_title_num_max": 545,
+        "id": 2302066795,
+        "name": "-BabaYaga-",
+        "leader": {
+            "id": 1713568456,
+            "card_id": 1026561,
+            "exp": 5000000,
+            "skill_lv": 10,
+            "awakening_route_id": 5500,
+            "is_favorite": true,
+            "is_released_potential": true,
+            "released_rate": 79.3413,
+            "optimal_awakening_step": null,
+            "awakenings": [],
+            "unlocked_square_statuses": [
+                0,
+                2,
+                2,
+                0
+            ],
+            "created_at": 1719711945,
+            "card_decoration_id": 413,
+            "exchangeable_item_id": null,
+            "potential_parameters": [
+                {
+                    "parameter_type": "Atk",
+                    "parameter_id": null,
+                    "total_value": 4000
+                },
+                {
+                    "parameter_type": "Defense",
+                    "parameter_id": null,
+                    "total_value": 4000
+                },
+                {
+                    "parameter_type": "Hp",
+                    "parameter_id": null,
+                    "total_value": 4000
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 3,
+                    "total_value": 5
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 6,
+                    "total_value": 8
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 4,
+                    "total_value": 8
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 7,
+                    "total_value": 8
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 5,
+                    "total_value": 7
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 2,
+                    "total_value": 15
+                },
+                {
+                    "parameter_type": "Skill",
+                    "parameter_id": 1,
+                    "total_value": 6
+                }
+            ],
+            "equipment_skill_items": [
+                {
+                    "grade": "silver",
+                    "slot": 0,
+                    "equipment_skill_item_id": 1622
+                },
+                {
+                    "grade": "bronze",
+                    "slot": 0,
+                    "equipment_skill_item_id": 1619
+                },
+                {
+                    "grade": "gold",
+                    "slot": 0,
+                    "equipment_skill_item_id": 3033
+                }
+            ],
+            "link_skill_lvs": [
+                {
+                    "id": 50,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 52,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 86,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 90,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 102,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 109,
+                    "skill_lv": 10
+                },
+                {
+                    "id": 123,
+                    "skill_lv": 10
+                }
+            ]
+        }
+    }
+]
