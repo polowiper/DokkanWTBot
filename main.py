@@ -4,7 +4,7 @@ import requests
 import json
 import pytz
 from datetime import datetime
-TOKEN = 'BOT TOKEN'
+TOKEN = 'BOT TOK'
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents = intents)
