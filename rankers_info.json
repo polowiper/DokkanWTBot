@@ -1,10 +1,10 @@
 [
     {
         "ranking": 1,
-        "point": 621845003,
+        "point": 700443115,
         "budokai_rank": 12,
-        "title_num": 588,
-        "continuous_title_num_max": 588,
+        "title_num": 663,
+        "continuous_title_num_max": 663,
         "id": 2287917656,
         "name": "Lotad",
         "leader": {
@@ -24,7 +24,7 @@
                 0,
                 0
             ],
-            "created_at": 1719711945,
+            "created_at": 1719731744,
             "card_decoration_id": 413,
             "exchangeable_item_id": 1,
             "potential_parameters": [
@@ -130,10 +130,10 @@
     },
     {
         "ranking": 2,
-        "point": 604355728,
+        "point": 671583661,
         "budokai_rank": 12,
-        "title_num": 570,
-        "continuous_title_num_max": 570,
+        "title_num": 634,
+        "continuous_title_num_max": 634,
         "id": 853840470,
         "name": "Discord",
         "leader": {
@@ -153,7 +153,7 @@
                 0,
                 0
             ],
-            "created_at": 1719711945,
+            "created_at": 1719731744,
             "card_decoration_id": null,
             "exchangeable_item_id": null,
             "potential_parameters": [
@@ -259,10 +259,10 @@
     },
     {
         "ranking": 3,
-        "point": 573965685,
+        "point": 645914195,
         "budokai_rank": 12,
-        "title_num": 545,
-        "continuous_title_num_max": 545,
+        "title_num": 613,
+        "continuous_title_num_max": 613,
         "id": 2302066795,
         "name": "-BabaYaga-",
         "leader": {
@@ -282,7 +282,7 @@
                 2,
                 0
             ],
-            "created_at": 1719711945,
+            "created_at": 1719731744,
             "card_decoration_id": 413,
             "exchangeable_item_id": null,
             "potential_parameters": [
