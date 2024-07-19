@@ -1,1 +1,1 @@
-# THE CURRENT CODE WILL BE COMPLETELY CHANGED DO NOT USE IT (for now)
+# The code will most likely evolve in the next few days
