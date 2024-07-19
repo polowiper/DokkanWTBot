@@ -4,4 +4,5 @@ store the scores to make nice graphs afterwards
 Gaps to the one in front (and behind too maybe ?)
 being able to aadd in how many hours you won't be grinding 
  a way to estimate what time of day with their pace they'd reach whatever
- 
+a command to show the highest pace a person has had 
+a command to show the leaderboard of the highest pace (might not do it as if I base the pace on the average then it'll just be the same as the regular leaderboard)
