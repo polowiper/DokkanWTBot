@@ -6,3 +6,7 @@ being able to aadd in how many hours you won't be grinding
  a way to estimate what time of day with their pace they'd reach whatever
 a command to show the highest pace a person has had 
 a command to show the leaderboard of the highest pace (might not do it as if I base the pace on the average then it'll just be the same as the regular leaderboard)
+!addTarget and they show up on your !pace !points etc
+extrapolation function with a custom pace
+invert the y axis when rendering multiple people on the same graph
+Give us the ability to set a start time, maybe So !seed 32 would give me the seed from hour 32 

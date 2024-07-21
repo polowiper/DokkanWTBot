@@ -3,7 +3,7 @@ import os
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from matplotlib.animation import FuncAnimation, PillowWriter
-
+import numpy as np
 #with open('test.json', 'r') as file:
 #    data = json.load(file)
 
@@ -72,8 +72,11 @@ def plot_and_save(players, key, xlabel, ylabel, title, output_dir, step=False, a
             if step:
                 line, = ax.step(player['hour'], player[key], where='mid')
                 plt.gca().invert_yaxis()
-                plt.gca().yaxis.set_major_locator(MultipleLocator(1))
+                y_ticks = np.linspace(min(player[key]), max(player[key]), 10, dtype=int)
+                plt.gca().set_yticks(y_ticks)
+                #plt.gca().yaxis.set_major_locator(MultipleLocator(5))
             else:
+                print(f"there are {len(player['hour'])} different hours and {len(player[key])} {key}")
                 line, = ax.plot(player['hour'], player[key])
 
             def update(num):
@@ -100,53 +103,40 @@ def plot_and_save(players, key, xlabel, ylabel, title, output_dir, step=False, a
             
             plt.close()
 
-def render(players, output_dir, animate=False, multiple=False):
-    plot_and_save(players, 'wins', 'Hours', 'Wins', "Wins by Hour", output_dir, animate=animate, multiple=multiple)
-    plot_and_save(players, 'points', 'Hours', 'Points', "Points by Hour", output_dir, animate=animate, multiple=multiple)
-    plot_and_save(players, 'wins_pace', 'Hours', 'Wins Pace', "Wins Pace by Hour", output_dir, animate=animate, multiple=multiple)
-    plot_and_save(players, 'points_pace', 'Hours', 'Points Pace', "Points Pace by Hour", output_dir, animate=animate, multiple=multiple)
-    plot_and_save(players, 'ranks', 'Hours', 'Ranks', "Ranks by Hour", output_dir, step=True, animate=animate, multiple=multiple)
-    plot_and_save(players, 'points_wins', 'Hours', 'Points/Wins', "Points per Win ratio by Hour", output_dir, animate=animate, multiple=multiple)
-    
+def render(players, output_dir, type="all", animate=False, multiple=False):
+    match type:
+        case "all":
+            plot_and_save(players, 'wins', 'Hours', 'Wins', "Wins by Hour", output_dir, animate=animate, multiple=multiple)
+            plot_and_save(players, 'points', 'Hours', 'Points', "Points by Hour", output_dir, animate=animate, multiple=multiple)
+            plot_and_save(players, 'wins_pace', 'Hours', 'Wins Pace', "Wins Pace by Hour", output_dir, animate=animate, multiple=multiple)
+            plot_and_save(players, 'points_pace', 'Hours', 'Points Pace', "Points Pace by Hour", output_dir, animate=animate, multiple=multiple)
+            plot_and_save(players, 'ranks', 'Hours', 'Ranks', "Ranks by Hour", output_dir, step=True, animate=animate, multiple=multiple)
+            plot_and_save(players, 'points_wins', 'Hours', 'Points/Wins', "Points per Win ratio by Hour", output_dir, animate=animate, multiple=multiple)
+            plot_and_save(players, 'max_wins', 'Hours', 'Max wins achievable', "Theoretical max", output_dir, animate=animate, multiple=multiple)
+            plot_and_save(players, 'max_points', 'Hours', 'Max points achievable', "Theoretical max", output_dir, animate=animate, multiple=multiple) 
+        case "wins":
+            plot_and_save(players, 'wins', 'Hours', 'Wins', "Wins by Hour", output_dir, animate=animate, multiple=multiple)
+        case "points":
+            plot_and_save(players, 'points', 'Hours', 'Points', "Points by Hour", output_dir, animate=animate, multiple=multiple)
+        case "wins_pace":
+            plot_and_save(players, 'wins_pace', 'Hours', 'Wins Pace', "Wins Pace by Hour", output_dir, animate=animate, multiple=multiple)
+        case "points_pace":
+            plot_and_save(players, 'points_pace', 'Hours', 'Points Pace', "Points Pace by Hour", output_dir, animate=animate, multiple=multiple)
+        case "ranks":
+            plot_and_save(players, 'ranks', 'Hours', 'Ranks', "Ranks by Hour", output_dir, step=True, animate=animate, multiple=multiple)
+        case "points_wins":
+            plot_and_save(players, 'points_wins', 'Hours', 'Points/Wins', "Points per Win ratio by Hour", output_dir, animate=animate, multiple=multiple)
+        case "max_wins":
+            plot_and_save(players, 'max_wins', 'Hours', 'Max wins achievable', "Theoretical max", output_dir, animate=animate, multiple=multiple)
+        case "max_points":
+            plot_and_save(players, 'max_points', 'Hours', 'Max points achievable', "Theoretical max", output_dir, animate=animate, multiple=multiple)
+        case _:
+            raise ValueError(f"Invalid type: {type}. Please choose from 'all', 'wins', 'points', 'wins_pace', 'points_pace', 'ranks', 'points_wins', 'max_wins', 'max_points'.")
+
+
+    #I do agree it looks kinda ugly but there are some cases where I can't just use the f"{type}" for example for the titles there is prob an easier way and cleaner way to do this but idc and it's 3am 
     print("Generated players' data")
 
-def theoretical_max(players, key, pace_key, xlabel, ylabel, title, output_dir, animate=False, multiple=False):
-    if not multiple:
-        for player in players:
-            player_name = player['name'].replace('$$', '\$\$')
-            player_dir = os.path.join(output_dir, player_name)
-            if not os.path.exists(player_dir):
-                os.makedirs(player_dir)
-
-            max_pace = max(player[pace_key])
-            hours = player['hour']
-            y_data = [max_pace * hour for hour in hours]
-
-            output_path = os.path.join(player_dir, f"{player_name}'s theoretical_max_" + "{}.gif".format(key) if animate else f"{player_name}'s theoretical_max_" + "{}.png".format(key))
-            plot_and_save(hours, y_data, xlabel, ylabel, title, output_path, animate=animate)
-    else:
-        max_name_length = max(len(player['name']) for player in players)
-        figsize = calculate_figsize(len(players), max_name_length)
-        
-        plt.figure(figsize=figsize)
-        
-        for player in players:
-            max_pace = max(player[pace_key])
-            hours = player['hour']
-            y_data = [max_pace * hour for hour in hours]
-            plt.plot(hours, y_data, label=player['name'].replace('$$', '\$\$'))
-        
-        plt.xlabel(xlabel)
-        plt.ylabel(ylabel)
-        plt.title(title)
-        plt.grid(True)
-        plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-        plt.text(0, -0.1, author_tag, transform=plt.gca().transAxes, ha='left', va='top', fontsize=10)
-        
-        output_path = os.path.join(output_dir, "theoretical_max_" + "{}_multiple.png".format(key))
-        plt.savefig(output_path, bbox_inches='tight')
-        plt.close()
-        return y_data[:-1]
 
 #animate = False  # Animated graphs will be set to False by default to save resources
 #multiple = True

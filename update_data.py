@@ -37,15 +37,24 @@ def update_data(data_fetch, ids_path):
             wins_delta = player_wins - player["wins"][-1]
             points_delta = player_points - player["points"][-1]
             time_delta =  round(elapsed.days * 24 + elapsed.seconds / 3600, 2) - player["hour"][-1]
+            if time_delta == 0:
+                break
             if wins_delta or points_delta == 0:
                 next
             player["wins"].append(player_wins)
             player["points"].append(player_points)
             player["ranks"].append(player_rank)
-            player["hour"].append(round(elapsed.days * 24 + elapsed.seconds / 3600,2))
-            player["points_pace"].append(round(points_delta / time_delta,0))
-            player["wins_pace"].append(round(wins_delta / time_delta,2))
+            player["hour"].append(round(elapsed.days * 24 + elapsed.seconds / 3600 -0.01, 2))
+            if len(player["hour"]) <= 5:
+                player["points_pace"].append(round((player_points)/(round(elapsed.days * 24 + elapsed.seconds / 3600,2)),0))
+                player["wins_pace"].append(round((player_wins)/(round(elapsed.days * 24 + elapsed.seconds / 3600,2)),2))
+            else:
+                player["points_pace"].append(round((player["points"][-1] - player["points"][-5]) / (player["hour"][-1] - player["hour"][-5]), 2))
+                player["wins_pace"].append(round((player["wins"][-1] - player["wins"][-5]) / (player["hour"][-1] - player["hour"][-5]), 2))
+                #print(player["name"] + " | " + str(player["wins_pace"][-1]))
             player["points_wins"].append(player_points_wins_ratio)
+            player["max_points"].append(player_points + max(player["points_pace"])*(left.days * 24 + left.seconds / 3600))
+            player["max_wins"].append(player_wins + max(player["wins_pace"])*(left.days * 24 + left.seconds / 3600))
         else:
             player = {
                 "id": player_id,
@@ -53,14 +62,16 @@ def update_data(data_fetch, ids_path):
                 "wins": [player_wins],
                 "points": [player_points],
                 "ranks": [player_rank],
-                "hour": [round(elapsed.days * 24 + elapsed.seconds / 3600,2)],
+                "hour": [round(elapsed.days * 24 + elapsed.seconds / 3600 -0.01, 2)],
                 "points_pace": [round((player_points)/(round(elapsed.days * 24 + elapsed.seconds / 3600,2)),0)], #If the user isn't there then we cannot calculate the relative pace so we'll just stick with the average pace
                 "wins_pace": [round((player_wins)/(round(elapsed.days * 24 + elapsed.seconds / 3600,2)),2)],
-                "points_wins": [player_points_wins_ratio]
+                "points_wins": [player_points_wins_ratio],
+                "max_points": [player_points + int(round((player_points)/(round(elapsed.days * 24 + elapsed.seconds / 3600,2)),0)) * (left.days * 24 + left.seconds / 3600)],
+                "max_wins": [player_wins + int(round((player_wins)/(round(elapsed.days * 24 + elapsed.seconds / 3600,2)),2)) * (left.days * 24 + left.seconds / 3600)]
             }
             id_data.append(player)
     with open(ids_path, 'w') as file:
-            json.dump(id_data, file, indent=4)
+            json.dump(id_data, file, indent=5)
     
 
 
@@ -82,7 +93,3 @@ print(f"""
     Time elapsed (in hours) : {(elapsed.days * 24) + round(elapsed.seconds / 3600, 2)} 
 """)
 '''
-#for i in range(0,49):
-#    with open(f"fetches/fetch{i}.json", 'r') as e:
-#        data = json.load(e)
-#    update_data(data, "data.json")

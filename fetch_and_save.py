@@ -9,7 +9,7 @@ if not os.path.exists('fetches'):
     os.makedirs('fetches')
 
 # Set the counter for the filename
-filename_counter = 2
+filename_counter = 168
 
 def save_json_to_file(data, filename):
     with open(f'fetches/{filename}', 'w') as f:
