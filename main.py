@@ -5,7 +5,8 @@ from render import render
 import os 
 from datetime import datetime, timezone, timedelta
 
-TOKEN = '' 
+
+TOKEN = 'BOT TOKEN' 
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents = intents)
@@ -83,6 +84,7 @@ async def on_ready():
 async def max(ctx, type: str = "points", identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
+    update, start, end, total, left, elapsed = time_data()
     if identifier is None:
         user_id = str(ctx.author.id)
         identifier = discord_users.get(user_id)
@@ -107,9 +109,11 @@ async def max(ctx, type: str = "points", identifier: str = None):
         if os.path.exists(image_path):
             file = discord.File(image_path, filename=f"max_{type}.png")
             embed.set_image(url=f"attachment://max_{type}.png")
+            embed.add_field(name="Updated at",value=update, inline=False)
             await ctx.send(file=file, embed=embed)
         else:
             await ctx.send(embed=embed)
+            embed.add_field(name="Updated at",value=update, inline=False)
     else:
         await ctx.send(f"No data available for points. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
 
@@ -117,6 +121,7 @@ async def max(ctx, type: str = "points", identifier: str = None):
 async def target(ctx, goal: int, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
+    update, start, end, total, left, elapsed = time_data()
     if identifier is None:
         user_id = str(ctx.author.id)
         identifier = discord_users.get(user_id)
@@ -140,6 +145,8 @@ async def target(ctx, goal: int, identifier: str = None):
 async def gap(ctx, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
+    update, start, end, total, left, elapsed = time_data()
+    
     if identifier is None:
         user_id = str(ctx.author.id)
         identifier = discord_users.get(user_id)
@@ -185,12 +192,15 @@ async def gap(ctx, identifier: str = None):
             inline=False
         )
     
+    embed.add_field(name="Updated at",value=update, inline=False)
     await ctx.send(embed=embed)
                        
 @bot.command(name='seed')
 async def seed(ctx, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
+    update, start, end, total, left, elapsed = time_data()
+    
     if identifier is None:
         user_id = str(ctx.author.id)
         identifier = discord_users.get(user_id)
@@ -216,7 +226,9 @@ async def seed(ctx, identifier: str = None):
             file = discord.File(image_path, filename="points_wins.png")
             embed.set_image(url=f"attachment://points_wins.png")
             await ctx.send(file=file, embed=embed)
+            embed.add_field(name="Updated at",value=update, inline=False)
         else:
+            embed.add_field(name="Updated at",value=update, inline=False)
             await ctx.send(embed=embed)
     else:
         await ctx.send(f"No data available for points. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
@@ -227,6 +239,8 @@ async def compare(ctx, type: str = None, *users):
         await ctx.send("Please provide more than 2 users")
     players = load_data()
     discord_users = load_discord_users()
+    update, start, end, total, left, elapsed = time_data()
+    
     player_list = []
     for user in users:
         player = find_player(players, user)
@@ -244,8 +258,10 @@ async def compare(ctx, type: str = None, *users):
     if os.path.exists(image_path):
         file = discord.File(image_path, filename="comp.png")
         embed.set_image(url=f"attachment://comp.png")
+        embed.add_field(name="Updated at",value=update, inline=False)
         await ctx.send(file=file, embed=embed)
     else:
+        embed.add_field(name="Updated at",value=update, inline=False)
         await ctx.send(embed=embed)
 
 
@@ -253,6 +269,8 @@ async def compare(ctx, type: str = None, *users):
 async def ranking(ctx, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
+    update, start, end, total, left, elapsed = time_data()
+    
     if identifier is None:
         user_id = str(ctx.author.id)
         identifier = discord_users.get(user_id)
@@ -277,8 +295,10 @@ async def ranking(ctx, identifier: str = None):
         if os.path.exists(image_path):
             file = discord.File(image_path, filename="ranks.png")
             embed.set_image(url=f"attachment://ranks.png")
+            embed.add_field(name="Updated at",value=update, inline=False)
             await ctx.send(file=file, embed=embed)
         else:
+            embed.add_field(name="Updated at",value=update, inline=False)
             await ctx.send(embed=embed)
     else:
         await ctx.send(f"No data available for points. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
@@ -288,6 +308,8 @@ async def ranking(ctx, identifier: str = None):
 async def points(ctx, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
+    update, start, end, total, left, elapsed = time_data()
+    
     if identifier is None:
         user_id = str(ctx.author.id)
         identifier = discord_users.get(user_id)
@@ -312,8 +334,10 @@ async def points(ctx, identifier: str = None):
         if os.path.exists(image_path):
             file = discord.File(image_path, filename="points.png")
             embed.set_image(url=f"attachment://points.png")
+            embed.add_field(name="Updated at",value=update, inline=False)
             await ctx.send(file=file, embed=embed)
         else:
+            embed.add_field(name="Updated at",value=update, inline=False)
             await ctx.send(embed=embed)
     else:
         await ctx.send(f"No data available for points. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
@@ -322,6 +346,8 @@ async def points(ctx, identifier: str = None):
 async def wins(ctx, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
+    update, start, end, total, left, elapsed = time_data()
+    
     if identifier is None:
         user_id = str(ctx.author.id)
         identifier = discord_users.get(user_id)
@@ -346,8 +372,10 @@ async def wins(ctx, identifier: str = None):
         if os.path.exists(image_path):
             file = discord.File(image_path, filename="wins.png")
             embed.set_image(url=f"attachment://wins.png")
+            embed.add_field(name="Updated at",value=update, inline=False)
             await ctx.send(file=file, embed=embed)
         else:
+            embed.add_field(name="Updated at",value=update, inline=False)
             await ctx.send(embed=embed)
     else:
         await ctx.send(f"No data available for wins. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
@@ -357,7 +385,8 @@ async def wins(ctx, identifier: str = None):
 async def pace(ctx, pace_type: str = "wins", identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
-
+    update, start, end, total, left, elapsed = time_data()
+    
     if identifier is None:
         user_id = str(ctx.author.id)
         identifier = discord_users.get(user_id)
@@ -390,8 +419,10 @@ async def pace(ctx, pace_type: str = "wins", identifier: str = None):
         if os.path.exists(image_path):
             file = discord.File(image_path, filename=f"{pace_type}.png")
             embed.set_image(url=f"attachment://{pace_type}.png")
+            embed.add_field(name="Updated at",value=update, inline=False)
             await ctx.send(file=file, embed=embed)
         else:
+            embed.add_field(name="Updated at",value=update, inline=False)
             await ctx.send(embed=embed)
     else:
         await ctx.send(f"No data available for {pace_type}. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")

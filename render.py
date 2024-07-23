@@ -56,6 +56,9 @@ def plot_and_save(players, key, xlabel, ylabel, title, output_dir, step=False, a
             plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
             plt.text(0, -0.1, author_tag, transform=plt.gca().transAxes, ha='left', va='top', fontsize=10)
             output_path = os.path.join(output_dir, f'multiple{key}.png')
+            if step:
+                plt.gca().invert_yaxis()
+            
             plt.savefig(output_path, bbox_inches='tight')
         
         plt.close()
