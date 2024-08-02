@@ -7,7 +7,7 @@ from datetime import datetime, timezone, timedelta
 #    if datetime.utcfromtimestamp(data["userlist"]["updated_at"])
 
 def update_data(data_fetch, ids_path):
-    update = datetime.utcfromtimestamp(data_fetch["userlist"]["updated_at"]).replace(tzinfo=timezone.utc)
+    update = datetime.utcfromtimestamp(data_fetch["top100_updated_at"]).replace(tzinfo=timezone.utc) #Yikes the top100 is updated more often than the rest so the assumption that all the data is updated at the same time as the top100 is false LLLL
     start = datetime.fromisoformat(data_fetch["start_at"]).astimezone(timezone.utc)
     end = datetime.fromisoformat(data_fetch["end_at"]).astimezone(timezone.utc)
     total = end - start
@@ -19,13 +19,13 @@ def update_data(data_fetch, ids_path):
     except FileNotFoundError:
         id_data = []
     id_dict = {player["id"]: player for player in id_data}
-    for ranker in data_fetch["userlist"]["rankers"]:
+    for ranker in data_fetch["players"]:
         player_id = ranker["id"]
         player_name = ranker["name"]
-        player_wins = ranker["title_num"]
+        player_wins = ranker["wins_count"]
         player_points = ranker["point"]
-        player_rank = ranker["ranking"]
-        player_points_wins_ratio = ranker["point"] / ranker["title_num"] 
+        player_rank = ranker["rank"]
+        player_points_wins_ratio = ranker["point"] / ranker["wins_count"] 
 
 
     #Should prob change the player at the top of this comment and the player under this one as the first one is just an iteration and the second one is an acutal dict

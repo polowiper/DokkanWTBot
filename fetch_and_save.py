@@ -16,7 +16,7 @@ def save_json_to_file(data, filename):
         json.dump(data, f, indent=4)
 
 def fetch_data():
-    response = requests.get('https://dbz-dokkanbattle.com/api/budokai/53')
+    response = requests.get('https://dokkan.wiki/api/budokai/53/players?with_ids=true&page=1&size=1000')
     response.raise_for_status()  # Raise an error for bad status codes
     data = response.json()
     return data

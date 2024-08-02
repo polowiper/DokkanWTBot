@@ -39,14 +39,14 @@ def latest_fetch():
         i += 1
     return f"{output_dir}/fetch{i-1}.json"
 
-def time_data():
+def time_data(rank:int):
     latest_fetch_path = latest_fetch()
 
     if latest_fetch_path:
         with open(latest_fetch_path, 'r') as file:
             data = json.load(file)
             print("Data loaded from the latest fetch file:")
-            update = datetime.utcfromtimestamp(data["userlist"]["updated_at"]).replace(tzinfo=timezone.utc)
+            update = datetime.utcfromtimestamp(data[f"top{100 if rank<=100 else 1000 if 100<rank<=1000 else 10000}_updated_at"]).replace(tzinfo=timezone.utc)
             start = datetime.fromisoformat(data["start_at"]).astimezone(timezone.utc)
             end = datetime.fromisoformat(data["end_at"]).astimezone(timezone.utc)
             total = end - start
