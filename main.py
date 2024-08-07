@@ -6,7 +6,7 @@ import os
 from datetime import datetime, timezone, timedelta
 
 
-TOKEN = 'BOT TOKEN' 
+TOKEN = 'MTI2NTMzMDk0ODc1MzQ2MTQ3MQ.GxKkIo.GqZai2fQAmyp6z8BB9UDBB8MAx_kGOVPIqTxCA' 
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents = intents)
@@ -39,14 +39,15 @@ def latest_fetch():
         i += 1
     return f"{output_dir}/fetch{i-1}.json"
 
-def time_data(rank:int):
+def time_data(rank:int = 100):
     latest_fetch_path = latest_fetch()
 
     if latest_fetch_path:
         with open(latest_fetch_path, 'r') as file:
             data = json.load(file)
             print("Data loaded from the latest fetch file:")
-            update = datetime.utcfromtimestamp(data[f"top{100 if rank<=100 else 1000 if 100<rank<=1000 else 10000}_updated_at"]).replace(tzinfo=timezone.utc)
+            update = datetime.utcfromtimestamp(data["userlist"]["updated_at"]).replace(tzinfo=timezone.utc)
+            #update = datetime.utcfromtimestamp(data[f"top{100 if rank<=100 else 1000 if 100<rank<=1000 else 10000}_updated_at"]).replace(tzinfo=timezone.utc)
             start = datetime.fromisoformat(data["start_at"]).astimezone(timezone.utc)
             end = datetime.fromisoformat(data["end_at"]).astimezone(timezone.utc)
             total = end - start
@@ -80,6 +81,86 @@ def find_player(data, identifier):
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user.name}')
+
+@bot.command(name='highest')#A command to show what the highest pace of a person was (it was in the TODO so I guess someone asked for it)
+async def highest(ctx, identifier: str = None):
+    players = load_data()
+    discord_users = load_discord_users()
+    update, start, end, total, left, elapsed = time_data()
+    
+    if identifier is None:
+        user_id = str(ctx.author.id)
+        identifier = discord_users.get(user_id)
+        if identifier is None:
+            await ctx.send("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
+            return
+    player = find_player(players, identifier)
+    if player is None:
+        await ctx.send(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
+        return
+    paces = player.get("wins_pace")
+    highest_pace = 0
+    for i in paces:
+        if i>highest_pace:
+            highest_pace = i
+    await ctx.send(highest_pace)
+    embed = discord.Embed(
+            title=f"{player['name']}'s highest pace",
+            description=f"The highest pace you've had was {highest_pace}.",
+            color=discord.Color.green()
+        )
+    await ctx.send(embed=embed)
+
+@bot.command(name="leaderboard")
+async def leaderboard(ctx, type: str = "wins_pace", page: int = 1):
+    players = load_data()
+    update, start, end, total, left, elapsed = time_data()
+    
+    lb = []
+    for player in players:
+        lb.append((player["name"], player[type][-1]))
+    final_lb = sorted(lb, key=lambda x: x[1], reverse=True)
+    
+    players_per_page = 10
+    total_pages = (len(final_lb) + players_per_page - 1) // players_per_page  # Ceiling division
+
+    if page < 1:
+        page = 1
+    elif page > total_pages:
+        page = total_pages
+
+    start_index = (page - 1) * players_per_page
+    end_index = start_index + players_per_page
+    
+    embed = discord.Embed(
+        title="🏆 Top Players Leaderboard 🏆",
+        description=f"Here are the players ranked {start_index + 1} to {min(end_index, len(final_lb))} with the highest {type}.",
+        color=discord.Color.gold()
+    )
+    
+    for idx, (name, comp) in enumerate(final_lb[start_index:end_index], start=start_index + 1):
+        if idx == 1:
+            rank_emoji = "🥇"
+        elif idx == 2:
+            rank_emoji = "🥈"
+        elif idx == 3:
+            rank_emoji = "🥉"
+        else:
+            rank_emoji = f"**#{idx}**"
+        embed.add_field(
+            name=f"{rank_emoji} {name}",
+            value=f"{type}: **{comp}**",
+            inline=False
+        )
+    
+    embed.set_footer(text=f"Page {page} of {total_pages}")
+    
+    await ctx.send(embed=embed)
+
+@bot.command(name="whatif")
+async def whatif(ctx, pace: int, pace_type: str = wins_pace)
+
+
 @bot.command(name="max")
 async def max(ctx, type: str = "points", identifier: str = None):
     players = load_data()
