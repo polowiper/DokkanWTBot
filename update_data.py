@@ -7,9 +7,12 @@ from datetime import datetime, timezone, timedelta
 #    if datetime.utcfromtimestamp(data["userlist"]["updated_at"])
 
 def update_data(data_fetch, ids_path):
-    update = datetime.utcfromtimestamp(data_fetch["top100_updated_at"]).replace(tzinfo=timezone.utc) #Yikes the top100 is updated more often than the rest so the assumption that all the data is updated at the same time as the top100 is false LLLL
-    start = datetime.fromisoformat(data_fetch["start_at"]).astimezone(timezone.utc)
-    end = datetime.fromisoformat(data_fetch["end_at"]).astimezone(timezone.utc)
+    update = datetime.utcfromtimestamp(data_fetch["rank1000_updated_at"]).replace(tzinfo=timezone.utc) #Yikes the top100 is updated more often than the rest so the assumption that all the data is updated at the same time as the top100 is false LLLL
+    ping = requests.get('https://dokkan.wiki/api/budokai/54')
+    ping.raise_for_status()
+    start_end = ping.json()
+    start = datetime.utcfromtimestamp(start_end["start_at"]).replace(tzinfo=timezone.utc) 
+    end = datetime.utcfromtimestamp(start_end["end_at"]).replace(tzinfo=timezone.utc) 
     total = end - start
     left = end - update
     elapsed = update - start
@@ -22,10 +25,10 @@ def update_data(data_fetch, ids_path):
     for ranker in data_fetch["players"]:
         player_id = ranker["id"]
         player_name = ranker["name"]
-        player_wins = ranker["wins_count"]
-        player_points = ranker["point"]
+        player_wins = ranker["win_count"]
+        player_points = ranker["points"]
         player_rank = ranker["rank"]
-        player_points_wins_ratio = ranker["point"] / ranker["wins_count"] 
+        player_points_wins_ratio = ranker["points"] / ranker["win_count"] 
 
 
     #Should prob change the player at the top of this comment and the player under this one as the first one is just an iteration and the second one is an acutal dict
@@ -78,8 +81,8 @@ def update_data(data_fetch, ids_path):
 
 '''
 update = datetime.utcfromtimestamp(data["userlist"]["updated_at"]).replace(tzinfo=timezone.utc)
-start = datetime.fromisoformat(data["start_at"]).astimezone(timezone.utc)
-end = datetime.fromisoformat(data["end_at"]).astimezone(timezone.utc)
+start = datetime.utcfromtimestamp(data["start_at"]).astimezone(timezone.utc)
+end = datetime.utcfromtimestamp(data["end_at"]).astimezone(timezone.utc)
 total = end - start
 left = end - update
 elapsed = update - start 

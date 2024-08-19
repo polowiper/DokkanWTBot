@@ -1,18 +1,8 @@
 import json 
 from datetime import datetime, timezone, timedelta
+from render import render
 
-
-
-path = "fetches"
-
-
-for i in range(0, 293):
-    with open(f"{path}/fetch{i}.json", "r") as e:
-        data = json.load(e)
-        update = datetime.utcfromtimestamp(data["userlist"]["updated_at"]).replace(tzinfo=timezone.utc)
-        print(f"fetch{i} | update:{update}")
-
-end = datetime.fromisoformat(data["end_at"]).astimezone(timezone.utc)
-
-print(f"End : {end}")
-
+#Mostly a dumb python file that I use to do tests it's not useful for anything
+#path = "fetches"
+#output_dir = "Albin"
+#render([player], output_dir, "points_wins")

@@ -4,9 +4,9 @@ import json
 from render import render
 import os 
 from datetime import datetime, timezone, timedelta
+import requests
 
-
-TOKEN = 'MTI2NTMzMDk0ODc1MzQ2MTQ3MQ.GxKkIo.GqZai2fQAmyp6z8BB9UDBB8MAx_kGOVPIqTxCA' 
+TOKEN = 'test bot token here so whatever even if you get it idc' 
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents = intents)
@@ -37,19 +37,22 @@ def latest_fetch():
         if not os.path.exists(os.path.join(output_dir, filename)):
             break
         i += 1
-    return f"{output_dir}/fetch{i-1}.json"
+    return f"{output_dir}/fetch{i-1}.json" if os.path.exists(os.path.join(output_dir, f"fetch{i-1}.json")) else None
 
-def time_data(rank:int = 100):
+def time_data():
     latest_fetch_path = latest_fetch()
 
     if latest_fetch_path:
         with open(latest_fetch_path, 'r') as file:
             data = json.load(file)
             print("Data loaded from the latest fetch file:")
-            update = datetime.utcfromtimestamp(data["userlist"]["updated_at"]).replace(tzinfo=timezone.utc)
+            ping = requests.get('https://dokkan.wiki/api/budokai/54')
+            ping.raise_for_status()
+            start_end = ping.json()
+            start = datetime.utcfromtimestamp(start_end["start_at"]).replace(tzinfo=timezone.utc) 
+            end = datetime.utcfromtimestamp(start_end["end_at"]).replace(tzinfo=timezone.utc) 
+            update = datetime.utcfromtimestamp(data["rank1000_updated_at"]).replace(tzinfo=timezone.utc)
             #update = datetime.utcfromtimestamp(data[f"top{100 if rank<=100 else 1000 if 100<rank<=1000 else 10000}_updated_at"]).replace(tzinfo=timezone.utc)
-            start = datetime.fromisoformat(data["start_at"]).astimezone(timezone.utc)
-            end = datetime.fromisoformat(data["end_at"]).astimezone(timezone.utc)
             total = end - start
             left = end - update
             elapsed = update - start
@@ -157,9 +160,9 @@ async def leaderboard(ctx, type: str = "wins_pace", page: int = 1):
     
     await ctx.send(embed=embed)
 
-@bot.command(name="whatif")
-async def whatif(ctx, pace: int, pace_type: str = wins_pace)
-
+#@bot.command(name="whatif")
+#async def whatif(ctx, pace: int, pace_type: str = wins_pace)
+1
 
 @bot.command(name="max")
 async def max(ctx, type: str = "points", identifier: str = None):
