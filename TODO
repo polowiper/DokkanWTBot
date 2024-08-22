@@ -8,7 +8,7 @@ Give us the ability to set a start time, maybe So !seed 32 would give me the see
 Spport the points_pace on the !highest command (I might as well support everything pepega)
 Aliases aka a dict at the start of every command
 add , to the points etc on the leaderboard function 
-
+add threading so I can render multiple graphs in parallel
 
 
 SUPPORT THE NEW API SO I CAN GET THE TOP 10 000

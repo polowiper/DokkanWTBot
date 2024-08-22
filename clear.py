@@ -2,7 +2,7 @@ import json
 from datetime import datetime, timezone, timedelta
 from render import render
 
-#Mostly a dumb python file that I use to do tests it's not useful for anything
-#path = "fetches"
-#output_dir = "Albin"
-#render([player], output_dir, "points_wins")
+with open("data.json", "r") as e:
+    data = json.load(e)
+output_dir = "top100_data"
+render(data[:3], output_dir, type="bulk",multiple=False,animate=True,  bulk_params=["ranks", "wins", "poiawants", "ranks"])

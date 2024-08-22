@@ -12,11 +12,11 @@
   in {
     devShells.${system}.default = pkgs.mkShell {
       packages = with pkgs; [
-        python311
-        python311Packages.matplotlib
-        python311Packages.discordpy
-        python311Packages.requests
-        python311Packages.pytz
+        python312
+        python312Packages.matplotlib
+        python312Packages.discordpy
+        python312Packages.requests
+        python312Packages.pytz
       ];
       shellHook = ''
         echo "Python devShell"

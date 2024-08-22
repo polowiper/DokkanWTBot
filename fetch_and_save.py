@@ -4,13 +4,8 @@ import json
 import requests
 from datetime import datetime
 from update_data import update_data
+import config
 
-
-
-API_TOKEN = "Nuh uh"
-
-# Pretty dumb to do it that way just realised, might move that to a file so it's set up automatically
-filename_counter = 0
 
 def save_json_to_file(data, filename):
     with open(f'fetches/{filename}', 'w') as f:
@@ -26,7 +21,7 @@ def latest_fetch():
     return f"{output_dir}/fetch{i-1}.json" if os.path.exists(os.path.join(output_dir, f"fetch{i-1}.json")) else None
 
 def fetch_data(size: int=1000):
-    headers = {'x-apitoken': API_TOKEN}
+    headers = {'x-apitoken': config.API_TOKEN}
     response = requests.get(f'https://dokkan.wiki/api/budokai/54/players/live?size={size}', headers=headers)
     response.raise_for_status()  # Raise an error for bad status codes
     data = response.json()
@@ -47,15 +42,15 @@ while True:
                 fetch = fetch_data(size=10000)
             else:
                 fetch = fetch_data(size=1000)
-            save_json_to_file(fetch, f"fetch{filename_counter}.json")
-            print(f"fetch {filename_counter} done.")
-            filename_counter+=1
+            save_json_to_file(fetch, f"fetch{config.LAST_FETCH}.json")
+            print(f"fetch {config.LAST_FETCH} done.")
+            config.LAST_FETCH+=1
     else:
         print("no data, doing first fetch")
         fetch = fetch_data(size=1000)
-        save_json_to_file(fetch, f"fetch{filename_counter}.json")
-        print(f"fetch {filename_counter} done.")
-        filename_counter+=1
+        save_json_to_file(fetch, f"fetch{config.LAST_FETCH}.json")
+        print(f"fetch {config.LAST_FETCH} done.")
+        config.LAST_FETCH+=1
     time.sleep(3*60)
 
 data = fetch_data()

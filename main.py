@@ -1,12 +1,12 @@
 import discord
 from discord.ext import commands
 import json
-from render import render
+from render import render, bulk_render
 import os 
 from datetime import datetime, timezone, timedelta
 import requests
+import config 
 
-TOKEN = 'test bot token here so whatever even if you get it idc' 
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents = intents)
@@ -85,7 +85,7 @@ def find_player(data, identifier):
 async def on_ready():
     print(f'Logged in as {bot.user.name}')
 
-@bot.command(name='highest')#A command to show what the highest pace of a person was (it was in the TODO so I guess someone asked for it)
+@bot.command(name='highest', aliases = ["high"])#A command to show what the highest pace of a person was (it was in the TODO so I guess someone asked for it)
 async def highest(ctx, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
@@ -114,8 +114,18 @@ async def highest(ctx, identifier: str = None):
         )
     await ctx.send(embed=embed)
 
-@bot.command(name="leaderboard")
+@bot.command(name="leaderboard", aliases = ["lb", "top"])
 async def leaderboard(ctx, type: str = "wins_pace", page: int = 1):
+    type_aliases = {
+        "wp": "wins_pace",
+        "pp": "points_pace",
+        "w": "wins",
+        "p": "points",
+        "mp": "max_points",
+        "mw": "max_wins",
+        "seed": "points_wins",
+    }
+    type = type_aliases[type]
     players = load_data()
     update, start, end, total, left, elapsed = time_data()
     
@@ -162,10 +172,20 @@ async def leaderboard(ctx, type: str = "wins_pace", page: int = 1):
 
 #@bot.command(name="whatif")
 #async def whatif(ctx, pace: int, pace_type: str = wins_pace)
-1
+
 
 @bot.command(name="max")
 async def max(ctx, type: str = "points", identifier: str = None):
+    type_aliases = {
+        "wp": "wins_pace",
+        "pp": "points_pace",
+        "w": "wins",
+        "p": "points",
+        "mp": "max_points",
+        "mw": "max_wins",
+        "seed": "points_wins",
+    }
+    type = type_aliases[type]
     players = load_data()
     discord_users = load_discord_users()
     update, start, end, total, left, elapsed = time_data()
@@ -183,7 +203,7 @@ async def max(ctx, type: str = "points", identifier: str = None):
     if maximum:
         render([player], output_dir, f"max_{type}")
         current_max = maximum[-1] 
-        image_path = os.path.join(output_dir, player["name"].replace('$$', '\$\$'), f'max_{type}.png')
+        image_path = os.path.join(output_dir, player["name"].replace('$', '\\$'), f'max_{type}.png')
 
         embed = discord.Embed(
             title=f"{player['name']}'s maximum {type} achieveable",
@@ -225,7 +245,7 @@ async def target(ctx, goal: int, identifier: str = None):
     req_wins_pace = req_pace / wins_points_ratio
     await ctx.send(f"Based on your current points, your goal, the time left and your average points/wins ratio.\n You would need to have a pace of {req_wins_pace} wins/hour to be able to reach {goal}")   
 
-@bot.command(name = "gap")
+@bot.command(name = "gap", aliases = ["g"])
 async def gap(ctx, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
@@ -299,7 +319,7 @@ async def seed(ctx, identifier: str = None):
     if seed_data:
         render([player], output_dir, "points_wins")
         current_seed = seed_data[-1]
-        image_path = os.path.join(output_dir, player["name"].replace('$$', '\$\$'), 'points_wins.png')
+        image_path = os.path.join(output_dir, player["name"].replace('$', '\\$'), 'points_wins.png')
 
         embed = discord.Embed(
             title=f"{player['name']}'s seed performance",
@@ -317,10 +337,50 @@ async def seed(ctx, identifier: str = None):
     else:
         await ctx.send(f"No data available for points. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
 
-@bot.command(name="compare")
+@bot.command(name="bulk", aliases = ["b"])
+async def bulk(ctx, identifier:str = None):
+    players = load_data()
+    discord_users = load_discord_users()
+    update, start, end, total, left, elapsed = time_data()
+    if identifier is None:
+        user_id = str(ctx.author.id)
+        identifier = discord_users.get(user_id)
+        if identifier is None:
+            await ctx.send("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
+            return
+    player = find_player(players, identifier)
+    if player is None:
+        await ctx.send(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
+        return
+    bulk_render([player], output_dir, ["points", "points_pace"])
+    image_path = os.path.join(output_dir, player["name"].replace('$', '\\$'), 'bulk_points_points_pace.png')
+    embed = discord.Embed(
+        title = "Summary ig",
+        description = "ab lablalbla",
+        color = discord.Color.purple()
+        )
+    if os.path.exists(image_path):
+        file = discord.File(image_path, filename="bulk.png")
+        embed.set_image(url=f"attachment://bulk.png")
+        embed.add_field(name="Updated at",value=update, inline=False)
+        await ctx.send(file=file, embed=embed)
+    else:
+        await ctx.send(embed=embed)
+
+@bot.command(name="compare", aliases = ["cmp", "c", "comp"])
 async def compare(ctx, type: str = None, *users):
+    type_aliases = {
+        "wp": "wins_pace",
+        "pp": "points_pace",
+        "w": "wins",
+        "p": "points",
+        "mp": "max_points",
+        "mw": "max_wins",
+        "seed": "points_wins",
+    }
+    type = type_aliases[type] if type in type_aliases else type
     if len(users) < 2:
-        await ctx.send("Please provide more than 2 users")
+        await ctx.send("Please at least 2 users")
     players = load_data()
     discord_users = load_discord_users()
     update, start, end, total, left, elapsed = time_data()
@@ -348,8 +408,7 @@ async def compare(ctx, type: str = None, *users):
         embed.add_field(name="Updated at",value=update, inline=False)
         await ctx.send(embed=embed)
 
-
-@bot.command(name='ranking')
+@bot.command(name='ranking', aliases = ["rank", "ranks"])
 async def ranking(ctx, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
@@ -369,7 +428,7 @@ async def ranking(ctx, identifier: str = None):
     if ranks_data:
         render([player], output_dir, "ranks")
         current_rank = ranks_data[-1]
-        image_path = os.path.join(output_dir, player["name"].replace('$$', '\$\$'), 'ranks.png')
+        image_path = os.path.join(output_dir, player["name"].replace('$', '\\$'), 'ranks.png')
 
         embed = discord.Embed(
             title=f"{player['name']}'s ranking",
@@ -388,7 +447,7 @@ async def ranking(ctx, identifier: str = None):
         await ctx.send(f"No data available for points. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
 
 
-@bot.command(name='points')
+@bot.command(name='points', aliases = ["pts"])
 async def points(ctx, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
@@ -426,7 +485,7 @@ async def points(ctx, identifier: str = None):
     else:
         await ctx.send(f"No data available for points. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
 
-@bot.command(name='wins')
+@bot.command(name='wins', aliases = ["w"])
 async def wins(ctx, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
@@ -465,8 +524,16 @@ async def wins(ctx, identifier: str = None):
         await ctx.send(f"No data available for wins. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
 
 
-@bot.command(name='pace')
+@bot.command(name='pace', aliases = ["pa", "p"])
 async def pace(ctx, pace_type: str = "wins", identifier: str = None):
+    pace_type_aliases = {
+        "w": "wins_pace",
+        "p": "points_pace",
+        "points": "points_pace",
+        "wins": "wins_pace", 
+        "pts": "points_pace"
+    }
+    pace_type = pace_type_aliases[pace_type]
     players = load_data()
     discord_users = load_discord_users()
     update, start, end, total, left, elapsed = time_data()
@@ -484,7 +551,7 @@ async def pace(ctx, pace_type: str = "wins", identifier: str = None):
         await ctx.send(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
         return
 
-    pace_type = pace_type + "_pace"
+    
     if pace_type not in ['wins_pace', 'points_pace']:
         await ctx.send(f'Invalid pace type "{pace_type}". Use "wins" or "points" ex:`!pace wins Lotad`.')
         return
@@ -520,4 +587,4 @@ async def link(ctx, identifier: str):
     
     await ctx.send(f'Your Discord ID has been successfully linked to player "{identifier}".')
 
-bot.run(TOKEN)
+bot.run(config.BOT_TOKEN)
