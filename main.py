@@ -1,4 +1,5 @@
-import discord
+import discord 
+from discord import app_commands
 from discord.ext import commands
 import json
 from render import render, bulk_render
@@ -6,7 +7,6 @@ import os
 from datetime import datetime, timezone, timedelta
 import requests
 import config 
-
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents = intents)
@@ -83,38 +83,39 @@ def find_player(data, identifier):
 
 @bot.event
 async def on_ready():
+    await bot.tree.sync()
     print(f'Logged in as {bot.user.name}')
 
-@bot.command(name='highest', aliases = ["high"])#A command to show what the highest pace of a person was (it was in the TODO so I guess someone asked for it)
+@bot.tree.command(name='highest')#A command to show what the highest pace of a person was (it was in the TODO so I guess someone asked for it)
 async def highest(ctx, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
     update, start, end, total, left, elapsed = time_data()
     
     if identifier is None:
-        user_id = str(ctx.author.id)
+        user_id = str(ctx.user.id)
         identifier = discord_users.get(user_id)
         if identifier is None:
-            await ctx.send("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
+            await ctx.response.send_message("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
             return
     player = find_player(players, identifier)
     if player is None:
-        await ctx.send(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
+        await ctx.response.send_message(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
         return
     paces = player.get("wins_pace")
     highest_pace = 0
     for i in paces:
         if i>highest_pace:
             highest_pace = i
-    await ctx.send(highest_pace)
+    await ctx.response.send_message(highest_pace)
     embed = discord.Embed(
             title=f"{player['name']}'s highest pace",
             description=f"The highest pace you've had was {highest_pace}.",
             color=discord.Color.green()
         )
-    await ctx.send(embed=embed)
+    await ctx.response.send_message(embed=embed)
 
-@bot.command(name="leaderboard", aliases = ["lb", "top"])
+@bot.tree.command(name="leaderboard")
 async def leaderboard(ctx, type: str = "wins_pace", page: int = 1):
     type_aliases = {
         "wp": "wins_pace",
@@ -125,7 +126,7 @@ async def leaderboard(ctx, type: str = "wins_pace", page: int = 1):
         "mw": "max_wins",
         "seed": "points_wins",
     }
-    type = type_aliases[type]
+    type = type_aliases[type] if type in type_aliases else type
     players = load_data()
     update, start, end, total, left, elapsed = time_data()
     
@@ -168,13 +169,14 @@ async def leaderboard(ctx, type: str = "wins_pace", page: int = 1):
     
     embed.set_footer(text=f"Page {page} of {total_pages}")
     
-    await ctx.send(embed=embed)
+    await ctx.response.send_message(embed=embed)
 
-#@bot.command(name="whatif")
+
+#@bot.tree.command(name="whatif")
 #async def whatif(ctx, pace: int, pace_type: str = wins_pace)
 
 
-@bot.command(name="max")
+@bot.tree.command(name="max")
 async def max(ctx, type: str = "points", identifier: str = None):
     type_aliases = {
         "wp": "wins_pace",
@@ -185,19 +187,19 @@ async def max(ctx, type: str = "points", identifier: str = None):
         "mw": "max_wins",
         "seed": "points_wins",
     }
-    type = type_aliases[type]
+    type = type_aliases[type] if type in type_aliases else type
     players = load_data()
     discord_users = load_discord_users()
     update, start, end, total, left, elapsed = time_data()
     if identifier is None:
-        user_id = str(ctx.author.id)
+        user_id = str(ctx.user.id)
         identifier = discord_users.get(user_id)
         if identifier is None:
-            await ctx.send("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
+            await ctx.response.send_message("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
             return
     player = find_player(players, identifier)
     if player is None:
-        await ctx.send(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
+        await ctx.response.send_message(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
         return
     maximum = player.get(f"max_{type}")
     if maximum:
@@ -214,52 +216,52 @@ async def max(ctx, type: str = "points", identifier: str = None):
             file = discord.File(image_path, filename=f"max_{type}.png")
             embed.set_image(url=f"attachment://max_{type}.png")
             embed.add_field(name="Updated at",value=update, inline=False)
-            await ctx.send(file=file, embed=embed)
+            await ctx.response.send_message(file=file, embed=embed)
         else:
-            await ctx.send(embed=embed)
+            await ctx.response.send_message(embed=embed)
             embed.add_field(name="Updated at",value=update, inline=False)
     else:
-        await ctx.send(f"No data available for points. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
+        await ctx.response.send_message(f"No data available for points. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
 
-@bot.command(name="target")
+@bot.tree.command(name="target")
 async def target(ctx, goal: int, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
     update, start, end, total, left, elapsed = time_data()
     if identifier is None:
-        user_id = str(ctx.author.id)
+        user_id = str(ctx.user.id)
         identifier = discord_users.get(user_id)
         if identifier is None:
-            await ctx.send("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
+            await ctx.response.send_message("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
             return
     if goal is None:
-        await ctx.send("Please provide a goal")
+        await ctx.response.send_message("Please provide a goal")
         return
     player = find_player(players, identifier)
     if player is None:
-        await ctx.send(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
+        await ctx.response.send_message(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
         return
     wins_points_ratio = player["points_wins"][-1]
     update, start, end, total, left, elapsed = time_data()
     req_pace = (goal - player["points"][-1]) / (left.days * 24 + left.seconds / 3600)
     req_wins_pace = req_pace / wins_points_ratio
-    await ctx.send(f"Based on your current points, your goal, the time left and your average points/wins ratio.\n You would need to have a pace of {req_wins_pace} wins/hour to be able to reach {goal}")   
+    await ctx.response.send_message(f"Based on your current points, your goal, the time left and your average points/wins ratio.\n You would need to have a pace of {req_wins_pace} wins/hour to be able to reach {goal}")   
 
-@bot.command(name = "gap", aliases = ["g"])
+@bot.tree.command(name = "gap")
 async def gap(ctx, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
     update, start, end, total, left, elapsed = time_data()
     
     if identifier is None:
-        user_id = str(ctx.author.id)
+        user_id = str(ctx.user.id)
         identifier = discord_users.get(user_id)
         if identifier is None:
-            await ctx.send("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
+            await ctx.response.send_message("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
             return
     player = find_player(players, identifier)
     if player is None:
-        await ctx.send(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
+        await ctx.response.send_message(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
         return
     pro, noob = find_gap(player, players)
     embed = discord.Embed(
@@ -297,23 +299,23 @@ async def gap(ctx, identifier: str = None):
         )
     
     embed.add_field(name="Updated at",value=update, inline=False)
-    await ctx.send(embed=embed)
+    await ctx.response.send_message(embed=embed)
                        
-@bot.command(name='seed')
+@bot.tree.command(name='seed')
 async def seed(ctx, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
     update, start, end, total, left, elapsed = time_data()
     
     if identifier is None:
-        user_id = str(ctx.author.id)
+        user_id = str(ctx.user.id)
         identifier = discord_users.get(user_id)
         if identifier is None:
-            await ctx.send("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
+            await ctx.response.send_message("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
             return
     player = find_player(players, identifier)
     if player is None:
-        await ctx.send(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
+        await ctx.response.send_message(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
         return
     seed_data = player.get("points_wins")
     if seed_data:
@@ -329,28 +331,28 @@ async def seed(ctx, identifier: str = None):
         if os.path.exists(image_path):
             file = discord.File(image_path, filename="points_wins.png")
             embed.set_image(url=f"attachment://points_wins.png")
-            await ctx.send(file=file, embed=embed)
+            await ctx.response.send_message(file=file, embed=embed)
             embed.add_field(name="Updated at",value=update, inline=False)
         else:
             embed.add_field(name="Updated at",value=update, inline=False)
-            await ctx.send(embed=embed)
+            await ctx.response.send_message(embed=embed)
     else:
-        await ctx.send(f"No data available for points. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
+        await ctx.response.send_message(f"No data available for points. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
 
-@bot.command(name="bulk", aliases = ["b"])
+@bot.tree.command(name="bulk")
 async def bulk(ctx, identifier:str = None):
     players = load_data()
     discord_users = load_discord_users()
     update, start, end, total, left, elapsed = time_data()
     if identifier is None:
-        user_id = str(ctx.author.id)
+        user_id = str(ctx.user.id)
         identifier = discord_users.get(user_id)
         if identifier is None:
-            await ctx.send("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
+            await ctx.response.send_message("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
             return
     player = find_player(players, identifier)
     if player is None:
-        await ctx.send(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
+        await ctx.response.send_message(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
         return
     bulk_render([player], output_dir, ["points", "points_pace"])
     image_path = os.path.join(output_dir, player["name"].replace('$', '\\$'), 'bulk_points_points_pace.png')
@@ -363,12 +365,13 @@ async def bulk(ctx, identifier:str = None):
         file = discord.File(image_path, filename="bulk.png")
         embed.set_image(url=f"attachment://bulk.png")
         embed.add_field(name="Updated at",value=update, inline=False)
-        await ctx.send(file=file, embed=embed)
+        await ctx.response.send_message(file=file, embed=embed)
     else:
-        await ctx.send(embed=embed)
+        await ctx.response.send_message(embed=embed)
 
-@bot.command(name="compare", aliases = ["cmp", "c", "comp"])
-async def compare(ctx, type: str = None, *users):
+@bot.tree.command(name="compare")
+async def compare(ctx, type: str = None, users:str = None):
+    users = users.split(" ")
     type_aliases = {
         "wp": "wins_pace",
         "pp": "points_pace",
@@ -380,7 +383,7 @@ async def compare(ctx, type: str = None, *users):
     }
     type = type_aliases[type] if type in type_aliases else type
     if len(users) < 2:
-        await ctx.send("Please at least 2 users")
+        await ctx.response.send_message("Please at least 2 users")
     players = load_data()
     discord_users = load_discord_users()
     update, start, end, total, left, elapsed = time_data()
@@ -389,7 +392,7 @@ async def compare(ctx, type: str = None, *users):
     for user in users:
         player = find_player(players, user)
         if player is None:
-            await ctx.send(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
+            await ctx.response.send_message(f'Player {user} not found. (not in the top100 ???)')
             return
         player_list.append(player)
     render(player_list, output_dir, type, multiple=True)
@@ -403,26 +406,26 @@ async def compare(ctx, type: str = None, *users):
         file = discord.File(image_path, filename="comp.png")
         embed.set_image(url=f"attachment://comp.png")
         embed.add_field(name="Updated at",value=update, inline=False)
-        await ctx.send(file=file, embed=embed)
+        await ctx.response.send_message(file=file, embed=embed)
     else:
         embed.add_field(name="Updated at",value=update, inline=False)
-        await ctx.send(embed=embed)
+        await ctx.response.send_message(embed=embed)
 
-@bot.command(name='ranking', aliases = ["rank", "ranks"])
+@bot.tree.command(name='ranking')
 async def ranking(ctx, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
     update, start, end, total, left, elapsed = time_data()
     
     if identifier is None:
-        user_id = str(ctx.author.id)
+        user_id = str(ctx.user.id)
         identifier = discord_users.get(user_id)
         if identifier is None:
-            await ctx.send("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
+            await ctx.response.send_message("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
             return
     player = find_player(players, identifier)
     if player is None:
-        await ctx.send(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
+        await ctx.response.send_message(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
         return
     ranks_data = player.get("ranks")
     if ranks_data:
@@ -439,29 +442,29 @@ async def ranking(ctx, identifier: str = None):
             file = discord.File(image_path, filename="ranks.png")
             embed.set_image(url=f"attachment://ranks.png")
             embed.add_field(name="Updated at",value=update, inline=False)
-            await ctx.send(file=file, embed=embed)
+            await ctx.response.send_message(file=file, embed=embed)
         else:
             embed.add_field(name="Updated at",value=update, inline=False)
-            await ctx.send(embed=embed)
+            await ctx.response.send_message(embed=embed)
     else:
-        await ctx.send(f"No data available for points. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
+        await ctx.response.send_message(f"No data available for points. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
 
 
-@bot.command(name='points', aliases = ["pts"])
+@bot.tree.command(name='points')
 async def points(ctx, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
     update, start, end, total, left, elapsed = time_data()
     
     if identifier is None:
-        user_id = str(ctx.author.id)
+        user_id = str(ctx.user.id)
         identifier = discord_users.get(user_id)
         if identifier is None:
-            await ctx.send("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
+            await ctx.response.send_message("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
             return
     player = find_player(players, identifier)
     if player is None:
-        await ctx.send(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
+        await ctx.response.send_message(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
         return
     points_data = player.get("points")
     if points_data:
@@ -478,28 +481,28 @@ async def points(ctx, identifier: str = None):
             file = discord.File(image_path, filename="points.png")
             embed.set_image(url=f"attachment://points.png")
             embed.add_field(name="Updated at",value=update, inline=False)
-            await ctx.send(file=file, embed=embed)
+            await ctx.response.send_message(file=file, embed=embed)
         else:
             embed.add_field(name="Updated at",value=update, inline=False)
-            await ctx.send(embed=embed)
+            await ctx.response.send_message(embed=embed)
     else:
-        await ctx.send(f"No data available for points. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
+        await ctx.response.send_message(f"No data available for points. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
 
-@bot.command(name='wins', aliases = ["w"])
+@bot.tree.command(name='wins')
 async def wins(ctx, identifier: str = None):
     players = load_data()
     discord_users = load_discord_users()
     update, start, end, total, left, elapsed = time_data()
     
     if identifier is None:
-        user_id = str(ctx.author.id)
+        user_id = str(ctx.user.id)
         identifier = discord_users.get(user_id)
         if identifier is None:
-            await ctx.send("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
+            await ctx.response.send_message("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
             return
     player = find_player(players, identifier)
     if player is None:
-        await ctx.send(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
+        await ctx.response.send_message(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
         return
     wins_data = player.get("wins")
     if wins_data:
@@ -516,15 +519,15 @@ async def wins(ctx, identifier: str = None):
             file = discord.File(image_path, filename="wins.png")
             embed.set_image(url=f"attachment://wins.png")
             embed.add_field(name="Updated at",value=update, inline=False)
-            await ctx.send(file=file, embed=embed)
+            await ctx.response.send_message(file=file, embed=embed)
         else:
             embed.add_field(name="Updated at",value=update, inline=False)
-            await ctx.send(embed=embed)
+            await ctx.response.send_message(embed=embed)
     else:
-        await ctx.send(f"No data available for wins. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
+        await ctx.response.send_message(f"No data available for wins. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
 
 
-@bot.command(name='pace', aliases = ["pa", "p"])
+@bot.tree.command(name='pace')
 async def pace(ctx, pace_type: str = "wins", identifier: str = None):
     pace_type_aliases = {
         "w": "wins_pace",
@@ -533,27 +536,27 @@ async def pace(ctx, pace_type: str = "wins", identifier: str = None):
         "wins": "wins_pace", 
         "pts": "points_pace"
     }
-    pace_type = pace_type_aliases[pace_type]
+    pace_type = pace_type_aliases[pace_type] if pace_type in pace_type_aliases else pace_type
     players = load_data()
     discord_users = load_discord_users()
     update, start, end, total, left, elapsed = time_data()
     
     if identifier is None:
-        user_id = str(ctx.author.id)
+        user_id = str(ctx.user.id)
         identifier = discord_users.get(user_id)
         if identifier is None:
-            await ctx.send("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
+            await ctx.response.send_message("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (!link)")
             return
     
     player = find_player(players, identifier)
     
     if player is None:
-        await ctx.send(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
+        await ctx.response.send_message(f'Player with name or ID "{identifier}" not found. (not in the top100 ???)')
         return
 
     
     if pace_type not in ['wins_pace', 'points_pace']:
-        await ctx.send(f'Invalid pace type "{pace_type}". Use "wins" or "points" ex:`!pace wins Lotad`.')
+        await ctx.response.send_message(f'Invalid pace type "{pace_type}". Use "wins" or "points" ex:`!pace wins Lotad`.')
         return
 
     pace_data = player.get(pace_type)
@@ -571,20 +574,19 @@ async def pace(ctx, pace_type: str = "wins", identifier: str = None):
             file = discord.File(image_path, filename=f"{pace_type}.png")
             embed.set_image(url=f"attachment://{pace_type}.png")
             embed.add_field(name="Updated at",value=update, inline=False)
-            await ctx.send(file=file, embed=embed)
+            await ctx.response.send_message(file=file, embed=embed)
         else:
             embed.add_field(name="Updated at",value=update, inline=False)
-            await ctx.send(embed=embed)
+            await ctx.response.send_message(embed=embed)
     else:
-        await ctx.send(f"No data available for {pace_type}. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
+        await ctx.response.send_message(f"No data available for {pace_type}. (either fetch failed and it's a huge skill issue or you're not in the top100 and that's a skill issue as well)")
 
-@bot.command(name='link')
+@bot.tree.command(name='link')
 async def link(ctx, identifier: str):
     discord_users = load_discord_users()
-    user_id = str(ctx.author.id)
+    user_id = str(ctx.user.id)
     discord_users[user_id] = identifier
-    save_discord_users(discord_users)
-    
-    await ctx.send(f'Your Discord ID has been successfully linked to player "{identifier}".')
+    save_discord_users(discord_users)    
+    await ctx.response.send_message(f'Your Discord ID has been successfully linked to player "{identifier}".')
 
 bot.run(config.BOT_TOKEN)
