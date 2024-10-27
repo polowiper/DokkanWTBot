@@ -6,8 +6,7 @@ from matplotlib.animation import FuncAnimation, PillowWriter
 import numpy as np
 import math
 
-#with open('test.json', 'r') as file:
-#    data = json.load(file)
+#If you really wanna bear all of this good luck lmao
 
 output_dir = 'final_data'
 if not os.path.exists(output_dir):
@@ -81,7 +80,7 @@ def plot_and_save(players, key, xlabel, ylabel, title, output_dir, step=False, a
                 plt.gca().set_yticks(y_ticks)
                 #plt.gca().yaxis.set_major_locator(MultipleLocator(5))
             else:
-                print(f"there are {len(player['hour'])} different hours and {len(player[key])} {key}")
+                #print(f"there are {len(player['hour'])} different hours and {len(player[key])} {key}")
                 line, = ax.plot(player['hour'], player[key])
 
             def update(num):
@@ -192,7 +191,7 @@ key_map = {
     "max_points": ('Theoretical max points achievable', 'Max Points')
 }
 
-def render(players, output_dir, type="all", animate=False, multiple=False, bulk_params=None):
+def render(players, output_dir, type="all", animate=False, multiple=False, bulk_params=None, step=False):
     if type == "all":
         plot_and_save(players, 'wins', 'Hours', 'Wins', "Wins by Hour", output_dir, animate=animate, multiple=multiple)
         plot_and_save(players, 'points', 'Hours', 'Points', "Points by Hour", output_dir, animate=animate, multiple=multiple)
@@ -208,10 +207,10 @@ def render(players, output_dir, type="all", animate=False, multiple=False, bulk_
         bulk_render(players, output_dir, bulk_params, animate=animate, multiple=multiple)
     else:
         title, ylabel = key_map.get(type, (f"{type.capitalize()} by Hour", type.capitalize()))
-        plot_and_save(players, type, 'Hours', ylabel, title, output_dir, animate=animate, multiple=multiple) 
+        plot_and_save(players, type, 'Hours', ylabel, title, output_dir, animate=animate, multiple=multiple, step=step) 
         
            #I do agree it looks kinda ugly but there are some cases where I can't just use the f"{type}" for example for the titles there is prob an easier way and cleaner way to do this but idc and it's 3am 
-    print("Generated players' data")
+    #print("Generated players' data")
 
 
 #animate = False  # Animated graphs will be set to False by default to save resources

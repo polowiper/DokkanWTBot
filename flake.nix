@@ -15,6 +15,8 @@
         python312
         python312Packages.matplotlib
         python312Packages.discordpy
+        python312Packages.tkinter
+        python312Packages.sv-ttk
         python312Packages.requests
         python312Packages.pytz
       ];

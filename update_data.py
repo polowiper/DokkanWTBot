@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 
 def update_data(data_fetch, ids_path):
     update = datetime.utcfromtimestamp(data_fetch["rank1000_updated_at"]).replace(tzinfo=timezone.utc) #Yikes the top100 is updated more often than the rest so the assumption that all the data is updated at the same time as the top100 is false LLLL
-    ping = requests.get('https://dokkan.wiki/api/budokai/54')
+    ping = requests.get('https://dokkan.wiki/api/budokai/55')
     ping.raise_for_status()
     start_end = ping.json()
     start = datetime.utcfromtimestamp(start_end["start_at"]).replace(tzinfo=timezone.utc) 
@@ -80,6 +80,8 @@ def update_data(data_fetch, ids_path):
 
 
 '''
+OLD ASS BROKEN CODE (USELESS)
+
 update = datetime.utcfromtimestamp(data["userlist"]["updated_at"]).replace(tzinfo=timezone.utc)
 start = datetime.utcfromtimestamp(data["start_at"]).astimezone(timezone.utc)
 end = datetime.utcfromtimestamp(data["end_at"]).astimezone(timezone.utc)

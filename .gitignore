@@ -1,3 +1,6 @@
-__pycache__/config.cpython-312.pyc
-top100_data/multiplewins.png
-top100_data/Lotad/bulk_points_points_pace.png
+fetches/*
+data.json
+top100_data/*
+__pycache__/
+cogs/__pycache__/
+data.json
