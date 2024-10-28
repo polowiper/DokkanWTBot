@@ -1,0 +1,6 @@
+matplotlib
+discord.py
+requests
+tkinter
+datetime
+asyncio
