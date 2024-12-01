@@ -5,3 +5,4 @@ tkinter
 datetime
 asyncio
 sqlite3
+flask
