@@ -3,7 +3,7 @@ import time
 import json
 import requests
 from datetime import datetime
-from update_data import update_data
+from update_db import update_data
 import config as conf
 
 def save_json_to_file(data, filename):
@@ -25,7 +25,7 @@ def latest_fetch():
 
 def fetch_data(size: int=1000):
     headers = {'x-apitoken': conf.API_TOKEN}
-    response = requests.get(f'https://dokkan.wiki/api/budokai/55/players/live?size={size}', headers=headers)
+    response = requests.get(f'https://dokkan.wiki/api/budokai/{conf.WT_EDITION}/players/live?size={size}', headers=headers)
     #response.raise_for_status()  # Raise an error for bad status codes
     data = response.json()
     return data
@@ -37,7 +37,7 @@ while True:
         config = json.load(file)
 
 
-    ping = requests.get('https://dokkan.wiki/api/budokai/55')
+    ping = requests.get('https://dokkan.wiki/api/budokai/{conf.WT_EDITION}')
     #ping.raise_for_status()
     if ping.status_code != 404:
         cond = ping.json() #Just a "ping" to get the latest rank1000_updated_at 
@@ -55,7 +55,7 @@ while True:
                 config['LAST_FETCH']+=1
                 with open('config.json', 'w') as file:
                     json.dump(config, file, indent=4)
-                update_data(fetch, "data.json")
+                update_data(fetch, "database.db")
 
         else:
             print("no data, doing first fetch")
@@ -67,7 +67,7 @@ while True:
             with open('config.json', 'w') as file:
                 json.dump(config, file, indent=4)
             print(latest_fetch_path)
-            update_data(fetch, "data.json")
+            update_data(fetch, "database.db")
 
     if ping.status_code == 404:
         print("api ins't up yet")

@@ -18,6 +18,7 @@
         python312Packages.tkinter
         python312Packages.sv-ttk
         python312Packages.requests
+        python312Packages.colorama
         python312Packages.pytz
       ];
       shellHook = ''

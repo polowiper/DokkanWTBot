@@ -48,11 +48,11 @@ help_texts = {"max": "This command computes the theorical maximum of points (or 
                      "remaining, and the points earned by the player. If possible, the command will add a graphic to "
                      "help visualize how to achieved maximum wins/points.",
               "pace": "This command computes the current pace of the player. As the leaderboard updates itself every 15 "
-                      "minutes, the pace is computed by taking the difference between the current points/wins 15 minutes"
-                      " ago and the newly data fetched then multiply it by 4.",
+                      "minutes, the pace is computed by taking the difference between the current points/wins 15 minutes",
               "target": "This command computes the minimum pace need to reach a goal of points. As explained in the "
                         "command, the minimum pace depends on your current points, your goal, the time left and your "
                         "average points/wins ratio.",
+              "when": "This commands takes a goal and a pace and a pace_type and computes the estimated time of when the player will reach the goal.",
               "highest": "This command simply return the highest pace achieved by the player. If you are not in the top "
                          "100, your pace won't appeared in the leaderboard so the bot will not record it.",
               "leaderboard": "This command shows the leaderboard of the tournament. The leaderboard is updated every 15 "
@@ -76,6 +76,9 @@ help_texts = {"max": "This command computes the theorical maximum of points (or 
               "link" : "This command allows you to link your discord ID to your in-game name. By typing /link name:your_name, "
                        "the bot know who you are and will be able to track your data. If you want to change your name, "
                        "simply type /link name:new_name. The bot will ask you if you want to update it.",
+              "gap":  "This command shows the gap between you and the players under and above you (in terms of ranks)."
+                      "It also shows the difference of gap between 2 resets telling you if you're faster or slower than your opponents",
+              "bulk": "A pretty ugly command that gives you a bunch of data in bulk (might make something out of it later on idk)",
               "help": "Show this page."}
 
 # Autocompletion help
@@ -99,17 +102,20 @@ class Help(commands.Cog):
     async def help(self, ctx, cmd: str = None):
         await ctx.response.defer()
         embed = discord.Embed(title="Help Menu")
-        if cmd is None:
-            desc = "Use `/help <command>` to get more info on a command. Available commands:\n"
-            for command in list(self.bot.tree.get_commands()): # Set to List
-                # embed.add_field(name=command.name, value=command.description, inline=False)
-                desc += f"\n- **/{command.name}**: _{command.description}_"
-            embed.description = desc
-            await ctx.followup.send(embed=embed)
-        else:
-            await ctx.followup.send(embed=discord.Embed(title=f"Help for {cmd}", description=gen_desc(cmd)),
-                                            view=DropdownView())
-
+        try:
+            if cmd is None:
+                desc = "Use `/help <command>` to get more info on a command. Available commands:\n"
+                for command in list(self.bot.tree.get_commands()): # Set to List
+                    # embed.add_field(name=command.name, value=command.description, inline=False)
+                    desc += f"\n- **/{command.name}**: _{command.description}_"
+                embed.description = desc
+                await ctx.followup.send(embed=embed)
+            else:
+                await ctx.followup.send(embed=discord.Embed(title=f"Help for {cmd}", description=gen_desc(cmd)),
+                                                view=DropdownView())
+        except Exception as e:
+            log_message(f"An Error occured: {e}")
+            await ctx.followup.send(f"Me no worki lol ask Polo 2 fix plz")
 
 async def setup(bot):
     await bot.add_cog(Help(bot))

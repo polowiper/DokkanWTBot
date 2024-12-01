@@ -1,14 +1,8 @@
 being able to set goals
 being able to aadd in how many hours you won't be grinding 
-a way to estimate what time of day with their pace they'd reach whatever (Kinda did that for the wins might see that later idk)
 !addTarget and they show up on your !pace !points etc
 extrapolation function with a custom pace
 Give us the ability to set a start time, maybe So !seed 32 would give me the seed from hour 32 
 
 Spport the points_pace on the !highest command (I might as well support everything pepega)
-Aliases aka a dict at the start of every command
-add , to the points etc on the leaderboard function 
 add threading so I can render multiple graphs in parallel
-
-
-SUPPORT THE NEW API SO I CAN GET THE TOP 10 000

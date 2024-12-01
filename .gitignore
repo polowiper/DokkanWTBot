@@ -4,3 +4,4 @@ top100_data/*
 __pycache__/
 cogs/__pycache__/
 data.json
+database.db

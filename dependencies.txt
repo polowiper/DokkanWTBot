@@ -4,3 +4,4 @@ requests
 tkinter
 datetime
 asyncio
+sqlite3
