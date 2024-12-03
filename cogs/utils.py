@@ -3,7 +3,7 @@ import sqlite3
 import json
 import requests
 from datetime import datetime, timezone
-from ..config import WT_EDITION
+from config import WT_EDITION
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 output_dir = os.path.join(BASE_DIR, '../top100_data')

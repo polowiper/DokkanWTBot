@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 from cogs.utils import *
 from datetime import datetime, timedelta
-from render import render
+from render import bulk_render
 
 class BulkCommand(commands.Cog):
     def __init__(self, bot):

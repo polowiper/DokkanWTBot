@@ -8,7 +8,7 @@ import math
 
 #If you really wanna bear all of this good luck lmao
 
-output_dir = 'final_data'
+output_dir = 'top100_data'
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
