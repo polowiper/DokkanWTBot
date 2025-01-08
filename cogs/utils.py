@@ -100,7 +100,7 @@ def time_data():
     if latest_fetch_path:
         with open(latest_fetch_path, 'r') as file:
             data = json.load(file)
-            ping = requests.get(f'https://dokkan.wiki/api/budokai/{WT_EDITION}') # API endpoint with necessary API_KEY
+            ping = requests.get(f'https://dokkan.wiki/api/budokai/56') # API endpoint with necessary API_KEY
             ping.raise_for_status()
             start_end = ping.json()
             start = datetime.utcfromtimestamp(start_end["start_at"]).replace(tzinfo=timezone.utc) 

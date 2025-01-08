@@ -31,7 +31,7 @@ def time_data(latest_fetch_path=None):
             total = end - start
             left = end - update
             elapsed = update - start
-            print(f"Update: {update}, Start: {start}, End: {end}, Total: {total}, Left: {left}, Elapsed: {elapsed}")
+            #print(f"Update: {update}, Start: {start}, End: {end}, Total: {total}, Left: {left}, Elapsed: {elapsed}")
             return update, start, end, total, left, elapsed
     else:
         #print("No fetch files found in the directory.")
@@ -108,7 +108,7 @@ def update_json_data_to_db(json_path, db_path):
                 json.dumps(player["wins_pace"]), json.dumps(player["points_wins"]), json.dumps(player["max_points"]), json.dumps(player["max_wins"])
             ))
             i += 1
-        print(f"[{i}] Player {player['name']} updated")
+        #print(f"[{i}] Player {player['name']} updated")
     conn.commit()
     conn.close()
 
@@ -123,7 +123,7 @@ def update_data(data_fetch, db_path):
     end = datetime.utcfromtimestamp(start_end["end_at"]).replace(tzinfo=timezone.utc)
     total = end - start
     left = end - update
-    print(f"Start time: {start}, end time: {end}, total time: {total}, left time: {left}, update time: {update}")
+    #print(f"Start time: {start}, end time: {end}, total time: {total}, left time: {left}, update time: {update}")
     elapsed = update - start
 
     conn = sqlite3.connect(db_path)
@@ -156,10 +156,11 @@ def update_data(data_fetch, db_path):
 
         elapsed_hours = round(elapsed.days * 24 + elapsed.seconds / 3600, 2)
 
-        cursor.execute('SELECT * FROM players WHERE id = ?', (player_id,))
+        cursor.execute('SELECT id, name, wins, points, ranks, hour, points_pace, wins_pace, points_wins, max_points, max_wins FROM players WHERE id = ?', (player_id,))
         result = cursor.fetchone()
 
         if result:
+            name = result[1] if result[1] else ""
             wins = json.loads(result[2]) if result[2] else []
             points = json.loads(result[3]) if result[3] else []
             ranks = json.loads(result[4]) if result[4] else []
@@ -170,13 +171,12 @@ def update_data(data_fetch, db_path):
             max_points = json.loads(result[9]) if result[9] else []
             max_wins = json.loads(result[10]) if result[10] else []
 
-            wins_delta = player_wins - wins[-1]
-            points_delta = player_points - points[-1]
             time_delta = elapsed_hours - hours[-1]
 
             if time_delta == 0:
                 continue
 
+            name = player_name
             wins.append(player_wins)
             points.append(player_points)
             ranks.append(player_rank)
@@ -195,11 +195,11 @@ def update_data(data_fetch, db_path):
 
             cursor.execute('''
                 UPDATE players SET 
-                    wins = ?, points = ?, ranks = ?, hour = ?, points_pace = ?, 
+                    name = ?, wins = ?, points = ?, ranks = ?, hour = ?, points_pace = ?, 
                     wins_pace = ?, points_wins = ?, max_points = ?, max_wins = ?
                 WHERE id = ?
             ''', (
-                json.dumps(wins), json.dumps(points), json.dumps(ranks), json.dumps(hours), json.dumps(points_pace),
+                name, json.dumps(wins), json.dumps(points), json.dumps(ranks), json.dumps(hours), json.dumps(points_pace),
                 json.dumps(wins_pace), json.dumps(points_wins), json.dumps(max_points), json.dumps(max_wins), player_id
             ))
         else:

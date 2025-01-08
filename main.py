@@ -259,7 +259,12 @@ async def on_ready():
         log_message(f'Loaded Everything, ready to go!')
     except Exception as e:
         log_message(f"Failed to load cog {filename}: {e}")
-
+    try:
+        log_message(f"Syncing commands")#Yeah I know looking at the resync_commands function this implementation is fucking ugly but having to await them, call them in async function specifically etc is a fucking pain so fuck this
+        await bot.tree.sync()
+        log_message("Synced commands succesfully")
+    except Exception as e:
+        log_message(f"Error syncing commands {e}")
 @bot.event
 async def on_app_command_completion(interaction, command):
     bot.commands_executed += 1 #Yeah I tracked the number of commands ran bcs smh the bot kept crashing but apparently it was due tue the host so that part is prob useless nowadays
@@ -267,4 +272,5 @@ async def on_app_command_completion(interaction, command):
     update_metrics()
 
 update_commands_list()
+
 window.mainloop()

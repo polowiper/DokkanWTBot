@@ -1,7 +1,7 @@
 from render import render
 import json
 import sqlite3
-output_dir = 'top100_data'
+output_dir = 'final_data'
 
 
 def find_player(conn, identifier):
@@ -24,20 +24,22 @@ def find_player(conn, identifier):
 
     return player
 
-def top100_players(data, latest_hour):
+def top100_players(latest_hour):
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
     u=0
     top100 = []
     conn.create_function("strrev", 1, lambda s: s[::-1])
     cursor.execute("""
-        SELECT id, CAST (SUBSTR(ranks, LENGTH(ranks) - INSTR(strrev(ranks), ',') + 2, LENGTH(ranks)) AS FLOAT) AS latest_rank FROM players
+        SELECT id, CAST (SUBSTR(ranks, LENGTH(ranks) - INSTR(strrev(ranks), ',') + 2, LENGTH(ranks)) AS INTEGER) AS latest_rank FROM players
         WHERE CAST(SUBSTR(hour, LENGTH(hour) - INSTR(strrev(hour), ',') + 2, LENGTH(hour)) AS FLOAT) = ?
-        ORDER BY latest_rank DESC
+        ORDER BY latest_rank ASC
         LIMIT 100
-    """)
-    cursor.fetchall()
-    for row in cursor:
+    """, (latest_hour,))
+    rawtop100 = cursor.fetchall()
+
+    for row in rawtop100:
+        #print(row)
         player = find_player(conn, row[0])
         if player is None:
             continue
@@ -45,7 +47,7 @@ def top100_players(data, latest_hour):
     return top100
 
 
-top100_data = top100_players(data)
+top100_data = top100_players(71.26)
 i = 0
 for player in top100_data:
     print(f"player{i}: {player['name']}")

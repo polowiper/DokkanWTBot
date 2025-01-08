@@ -2,10 +2,10 @@ import os
 import time
 import json
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from update_db import update_data
 import config as conf
-
+import sys
 def save_json_to_file(data, filename):
     with open(f'fetches/{filename}', 'w') as f:
         json.dump(data, f, indent=4)
@@ -25,53 +25,71 @@ def latest_fetch():
 
 def fetch_data(size: int=1000):
     headers = {'x-apitoken': conf.API_TOKEN}
-    response = requests.get(f'https://dokkan.wiki/api/budokai/{conf.WT_EDITION}/players/live?size={size}', headers=headers)
+    response = requests.get(f'https://dokkan.wiki/api/budokai/56/players/live?size={size}', headers=headers)
     #response.raise_for_status()  # Raise an error for bad status codes
     data = response.json()
     return data
 
+
+def dynamic_print(last_fetch, updated_time, next_api_call):
+    sys.stdout.write(f"\rLast Fetch: {last_fetch} | Updated At: {datetime.fromtimestamp(updated_time).strftime('%Y-%m-%d %H:%M:%S')} | Next API Call: {next_api_call}")
+    sys.stdout.flush()
 
 while True:
     latest_fetch_path = latest_fetch()
     with open('config.json', 'r') as file:
         config = json.load(file)
 
-
-    ping = requests.get('https://dokkan.wiki/api/budokai/{conf.WT_EDITION}')
-    #ping.raise_for_status()
+    ping = requests.get('https://dokkan.wiki/api/budokai/56')
+    # ping.raise_for_status()
+    updated_time = datetime.now().timestamp()
     if ping.status_code != 404:
-        cond = ping.json() #Just a "ping" to get the latest rank1000_updated_at 
-    
+        cond = ping.json()  # Just a "ping" to get the latest rank1000_updated_at
+
         if latest_fetch_path:
             with open(latest_fetch_path, 'r') as file:
-                data = json.load(file) #Get the latest fetch to see when it has been updated
-            if cond["rank1000_updated_at"] != data["rank1000_updated_at"]: #if it's different then it's updated
-                if cond["rank1000_updated_at"] == cond["rank10000_updated_at"]: #We know the data has been updated so if the top10k is the same as the top1k then it means the top10k has been updated as well
+                data = json.load(file)  # Get the latest fetch to see when it has been updated
+            if cond["rank1000_updated_at"] != data["rank1000_updated_at"]:  # if it's different then it's updated
+                if cond["rank1000_updated_at"] == cond["rank10000_updated_at"]:  # Check if top10k is also updated
                     fetch = fetch_data(size=10000)
                 else:
                     fetch = fetch_data(size=1000)
+
                 save_json_to_file(fetch, f"fetch{config['LAST_FETCH']}.json")
-                print(f"fetch {config['LAST_FETCH']} done.")
-                config['LAST_FETCH']+=1
+                updated_time = cond['rank1000_updated_at']
+                config['LAST_FETCH'] += 1
+                
                 with open('config.json', 'w') as file:
                     json.dump(config, file, indent=4)
-                update_data(fetch, "database.db")
 
+                try:
+                    update_data(fetch, "database.db")
+                except Exception as e:
+                    print(f"Error: {e}")
         else:
-            print("no data, doing first fetch")
+            print("No data, doing first fetch")
             fetch = fetch_data(size=1000)
-            #print(fetch)
             save_json_to_file(fetch, f"fetch{config['LAST_FETCH']}.json")
-            print(f"fetch {config['LAST_FETCH']} done.")
-            config['LAST_FETCH']+=1
+            updated_time = cond['rank1000_updated_at']
+            config['LAST_FETCH'] += 1
+
             with open('config.json', 'w') as file:
                 json.dump(config, file, indent=4)
-            print(latest_fetch_path)
-            update_data(fetch, "database.db")
+
+            try:
+                update_data(fetch, "database.db")
+            except Exception as e:
+                print(f"Error: {e}")
+
+        # Display dynamic output
+        next_api_call = (datetime.now() + timedelta(minutes=3)).strftime('%Y-%m-%d %H:%M:%S')
+        dynamic_print(config['LAST_FETCH']-1, updated_time, next_api_call)
 
     if ping.status_code == 404:
-        print("api ins't up yet")
-    time.sleep(3*60)
+        print("API isn't up yet")
+
+    time.sleep(3 * 60)
+
 
 #while True:
 #    ping = requests.get("https://dokkan.wiki/api/budokai/53")

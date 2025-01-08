@@ -15,14 +15,14 @@ class LeaderboardCommand(commands.Cog):
     async def autocompletion_type_lb(self, interaction: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
         choices = [
             app_commands.Choice(name=a, value=a)
-            for a in ["wins_pace", "points_pace", "wins", "points", "points_wins"]
+            for a in ["wins_pace", "points_pace", "wins", "points", "points_wins", 'ranks']
             ]
         return choices
 
     @app_commands.command(name="leaderboard", description="Show the top players leaderboard.")
     @app_commands.autocomplete(type=autocompletion_type_lb)
-    @app_commands.describe(type="The type of leaderboard you want to see. Either 'wins', 'points', 'wins_pace' or 'points_pace'.", page="The page of the leaderboard you want to see.")
-    async def leaderboard(self, ctx, type: str = "wins_pace", page: int = 1):
+    @app_commands.describe(type="The type of leaderboard you want to see. Either 'wins', 'points', 'ranks', 'wins_pace' or 'points_pace'.", page="The page of the leaderboard you want to see.")
+    async def leaderboard(self, ctx, type: str = "points", page: int = 1):
         try:
             await ctx.response.defer()
             # vérifier si le type est valide
@@ -41,7 +41,8 @@ class LeaderboardCommand(commands.Cog):
                 "points_pace": "FLOAT",
                 "wins": "INTEGER",
                 "points": "INTEGER",
-                "points_wins": "FLOAT"
+                "points_wins": "FLOAT",
+                "ranks": "INTEGER"
             }
             current_hour = round(elapsed.days * 24 + elapsed.seconds / 3600, 2)
             conn.create_function("strrev", 1, lambda s: s[::-1])

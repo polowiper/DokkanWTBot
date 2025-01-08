@@ -25,11 +25,10 @@ bot = commands.Bot(command_prefix='!', intents = intents)
 def log_message(message):
     print(f"[{datetime.now().strftime('%H:%M:%S')}] {message}")
 
-def resync_commands():
+async def resync_commands():
     try:
         log_message("Resyncing commands...")
-        asyncio.run_coroutine_threadsafe(bot.tree.sync(), bot.loop)
-        update_commands_list()
+        await bot.tree.sync()
         log_message("Commands resynced.")
     except Exception as e:
         log_message(f"Error resyncing commands: {e}")
@@ -37,7 +36,6 @@ def resync_commands():
 
 def run_discord_bot():
     try:
-        bot.tree.sync()
         bot.run(config.BOT_TOKEN)
     except Exception as e:
         log_message(f"{Fore.RED}Error running bot: {Style.RESET_ALL}{e}")
@@ -55,7 +53,8 @@ async def on_ready():
             if filename.endswith(".py") and filename != "utils.py":
                 await bot.load_extension(f"cogs.{filename[:-3]}")
                 log_message(f'Loaded {filename}')
-        log_message(f'Loaded Everything, ready to go!')
+        log_message(f'Loaded Everything, syncing commands:')
+        await resync_commands()
     except Exception as e:
         log_message(f"Failed to load cog {filename}: {e}")
 
