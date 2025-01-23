@@ -35,6 +35,7 @@ class CompareCommand(commands.Cog):
     @app_commands.autocomplete(type=autocompletion_type_cmp)
     async def compare(self, ctx, type: str = None, users: str = None):
         try:
+            step = False
             await ctx.response.defer()
             if type not in ["points_pace", "wins_pace", "ranks", "wins", "points", "points_wins", "max_wins", "max_points"]:
                 await ctx.followup.send("Please provide a valid type. Either 'wins', 'points', 'max_points', 'max_wins', 'wins_pace', 'points_pace' or 'ranks'.")
@@ -63,8 +64,9 @@ class CompareCommand(commands.Cog):
             if not_found:
                 await ctx.followup.send(f"Players not found: {', '.join(not_found)}.")
                 return
-
-            render(player_list, "top100_data", type, multiple=True)
+            if type == "ranks":
+                step = True
+            render(player_list, "top100_data", type, multiple=True, step=step)
             image_path = os.path.join("top100_data", f"multiple{type}.png")
 
             embed = discord.Embed(
