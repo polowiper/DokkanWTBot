@@ -4,7 +4,7 @@ import json
 import requests
 from datetime import datetime, timedelta
 from update_db import update_data
-import config as conf
+from config import USER_AGENT, API_TOKEN, WT_EDITION
 import sys
 def save_json_to_file(data, filename):
     with open(f'fetches/{filename}', 'w') as f:
@@ -24,8 +24,11 @@ def latest_fetch():
 
 
 def fetch_data(size: int=1000):
-    headers = {'x-apitoken': conf.API_TOKEN}
-    response = requests.get(f'https://dokkan.wiki/api/budokai/56/players/live?size={size}', headers=headers)
+    headers = {
+        'x-apitoken': API_TOKEN,
+        'User-Agent': USER_AGENT
+    }
+    response = requests.get(f'https://dokkan.wiki/api/budokai/{WT_EDITION}/players/live?size={size}', headers=headers)
     #response.raise_for_status()  # Raise an error for bad status codes
     data = response.json()
     return data
@@ -39,8 +42,10 @@ while True:
     latest_fetch_path = latest_fetch()
     with open('config.json', 'r') as file:
         config = json.load(file)
-
-    ping = requests.get('https://dokkan.wiki/api/budokai/56')
+    headers = {
+        "User-Agent": USER_AGENT
+    }
+    ping = requests.get(f'https://dokkan.wiki/api/budokai/{WT_EDITION}', headers=headers)
     # ping.raise_for_status()
     updated_time = datetime.now().timestamp()
     if ping.status_code != 404:

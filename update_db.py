@@ -7,7 +7,7 @@ import os
 import json
 import requests
 from datetime import datetime, timezone, timedelta
-import config
+from config import WT_EDITION, USER_AGENT
 #def update(data, fetch):
 #    if datetime.utcfromtimestamp(data["userlist"]["updated_at"])
 
@@ -22,7 +22,10 @@ def time_data(latest_fetch_path=None):
     if latest_fetch_path:
         with open(latest_fetch_path, 'r') as file:
             data = json.load(file)
-            ping = requests.get(f'https://dokkan.wiki/api/budokai/{config.WT_EDITION}') # API endpoint with necessary API_KEY
+            headers = {
+                "User-Agent": USER_AGENT
+            }
+            ping = requests.get(f'https://dokkan.wiki/api/budokai/{WT_EDITION}', headers=headers) # API endpoint with necessary API_KEY
             ping.raise_for_status()
             start_end = ping.json()
             start = datetime.utcfromtimestamp(start_end["start_at"]).replace(tzinfo=timezone.utc) 
@@ -60,11 +63,9 @@ def update_json_data_to_db(json_path, db_path):
         json_data = json.load(file)
     i = 0
     for player in json_data:
-        #The data format is the same as in the db so we just need to take the player data and insert it into the db players table
         cursor.execute('SELECT * FROM players WHERE id = ?', (player["id"],))
         result = cursor.fetchone()
         if result:
-            #Get the current data
             wins = json.loads(result[2])
             points = json.loads(result[3])
             ranks = json.loads(result[4])
@@ -75,7 +76,6 @@ def update_json_data_to_db(json_path, db_path):
             max_points = json.loads(result[9])
             max_wins = json.loads(result[10])
             
-            #Update it with the existing data
             wins.append(player["wins"])
             points.append(player["points"])
             ranks.append(player["ranks"])
@@ -112,24 +112,24 @@ def update_json_data_to_db(json_path, db_path):
     conn.commit()
     conn.close()
 
-
-
 def update_data(data_fetch, db_path):
     update = datetime.utcfromtimestamp(data_fetch["rank1000_updated_at"]).replace(tzinfo=timezone.utc)
-    ping = requests.get(f'https://dokkan.wiki/api/budokai/{config.WT_EDITION}')
+    headers={ 
+        "User-Agent": USER_AGENT
+    }
+    ping = requests.get(f'https://dokkan.wiki/api/budokai/{WT_EDITION}', headers=headers)
     ping.raise_for_status()
     start_end = ping.json()
     start = datetime.utcfromtimestamp(start_end["start_at"]).replace(tzinfo=timezone.utc)
     end = datetime.utcfromtimestamp(start_end["end_at"]).replace(tzinfo=timezone.utc)
+    
     total = end - start
     left = end - update
-    #print(f"Start time: {start}, end time: {end}, total time: {total}, left time: {left}, update time: {update}")
     elapsed = update - start
+    elapsed_hours = round(elapsed.total_seconds() / 3600, 2)
 
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-
-    # Create table if not exists
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS players (
             id INTEGER PRIMARY KEY,
@@ -146,68 +146,77 @@ def update_data(data_fetch, db_path):
         )
     ''')
 
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS borders (
+            rank INTEGER PRIMARY KEY,
+            wins TEXT,
+            points TEXT,
+            hour TEXT,
+            points_pace TEXT,
+            wins_pace TEXT,
+            points_wins TEXT,
+            max_points TEXT,
+            max_wins TEXT
+        )
+    ''')
+    tracked_ranks = {1, 5, 10, 20, 30, 50, 75, 100, 1000, 2000, 10000}  
+
     for ranker in data_fetch["players"]:
         player_id = ranker["id"]
         player_name = ranker["name"]
         player_wins = ranker["win_count"]
         player_points = ranker["points"]
         player_rank = ranker["rank"]
-        player_points_wins_ratio = ranker["points"] / ranker["win_count"]
+        player_points_wins_ratio = int(player_points / player_wins) if player_wins > 0 else 0
 
-        elapsed_hours = round(elapsed.days * 24 + elapsed.seconds / 3600, 2)
-
-        cursor.execute('SELECT id, name, wins, points, ranks, hour, points_pace, wins_pace, points_wins, max_points, max_wins FROM players WHERE id = ?', (player_id,))
+        cursor.execute('SELECT * FROM players WHERE id = ?', (player_id,))
         result = cursor.fetchone()
 
         if result:
-            name = result[1] if result[1] else ""
-            wins = json.loads(result[2]) if result[2] else []
-            points = json.loads(result[3]) if result[3] else []
-            ranks = json.loads(result[4]) if result[4] else []
-            hours = json.loads(result[5]) if result[5] else []
-            points_pace = json.loads(result[6]) if result[6] else []
-            wins_pace = json.loads(result[7]) if result[7] else []
-            points_wins = json.loads(result[8]) if result[8] else []
-            max_points = json.loads(result[9]) if result[9] else []
-            max_wins = json.loads(result[10]) if result[10] else []
+            wins = json.loads(result[2])
+            points = json.loads(result[3])
+            ranks = json.loads(result[4])
+            hours = json.loads(result[5])
+            points_pace = json.loads(result[6])
+            wins_pace = json.loads(result[7])
+            points_wins = json.loads(result[8])
+            max_points = json.loads(result[9])
+            max_wins = json.loads(result[10])
 
-            time_delta = elapsed_hours - hours[-1]
+            time_delta = elapsed_hours - hours[-1] if hours else 0
 
-            if time_delta == 0:
-                continue
+            if time_delta > 0:
+                wins.append(player_wins)
+                points.append(player_points)
+                ranks.append(player_rank)
+                hours.append(elapsed_hours)
 
-            name = player_name
-            wins.append(player_wins)
-            points.append(player_points)
-            ranks.append(player_rank)
-            hours.append(elapsed_hours)
-    
-            if len(hours) <= 5:
-                points_pace.append(round(player_points / elapsed_hours, 0))
-                wins_pace.append(round(player_wins / elapsed_hours, 2))
-            else:
-                points_pace.append(round((points[-1] - points[-5]) / (hours[-1] - hours[-5]), 2))
-                wins_pace.append(round((wins[-1] - wins[-5]) / (hours[-1] - hours[-5]), 2))
+                if len(hours) <= 5:
+                    points_pace.append(int(player_points / elapsed_hours))
+                    wins_pace.append(round(player_wins / elapsed_hours, 2))
+                else:
+                    points_pace.append(int((points[-1] - points[-5]) / (hours[-1] - hours[-5])))
+                    wins_pace.append(round((wins[-1] - wins[-5]) / (hours[-1] - hours[-5]), 2))
 
-            points_wins.append(player_points_wins_ratio)
-            max_points.append(player_points + max(points_pace) * (left.days * 24 + left.seconds / 3600))
-            max_wins.append(player_wins + max(wins_pace) * (left.days * 24 + left.seconds / 3600))
+                points_wins.append(player_points_wins_ratio)
+                max_points.append(int(player_points + max(points_pace) * (left.total_seconds() / 3600)))
+                max_wins.append(int(player_wins + max(wins_pace) * (left.total_seconds() / 3600)))
 
-            cursor.execute('''
-                UPDATE players SET 
-                    name = ?, wins = ?, points = ?, ranks = ?, hour = ?, points_pace = ?, 
-                    wins_pace = ?, points_wins = ?, max_points = ?, max_wins = ?
-                WHERE id = ?
-            ''', (
-                name, json.dumps(wins), json.dumps(points), json.dumps(ranks), json.dumps(hours), json.dumps(points_pace),
-                json.dumps(wins_pace), json.dumps(points_wins), json.dumps(max_points), json.dumps(max_wins), player_id
-            ))
+                cursor.execute('''
+                    UPDATE players SET 
+                        name = ?, wins = ?, points = ?, ranks = ?, hour = ?, points_pace = ?, 
+                        wins_pace = ?, points_wins = ?, max_points = ?, max_wins = ?
+                    WHERE id = ?
+                ''', (
+                    player_name, json.dumps(wins), json.dumps(points), json.dumps(ranks), json.dumps(hours), 
+                    json.dumps(points_pace), json.dumps(wins_pace), json.dumps(points_wins), 
+                    json.dumps(max_points), json.dumps(max_wins), player_id
+                ))
         else:
-            elapsed_hours = round(elapsed.days * 24 + elapsed.seconds / 3600, 2)
-            points_pace = [round(player_points / elapsed_hours, 0)]
+            points_pace = [int(player_points / elapsed_hours)]
             wins_pace = [round(player_wins / elapsed_hours, 2)]
-            max_points = [player_points + points_pace[0] * (left.days * 24 + left.seconds / 3600)]
-            max_wins = [player_wins + wins_pace[0] * (left.days * 24 + left.seconds / 3600)]
+            max_points = [int(player_points + points_pace[0] * (left.total_seconds() / 3600))]
+            max_wins = [int(player_wins + wins_pace[0] * (left.total_seconds() / 3600))]
 
             cursor.execute('''
                 INSERT INTO players (id, name, wins, points, ranks, hour, points_pace, 
@@ -219,8 +228,61 @@ def update_data(data_fetch, db_path):
                 json.dumps(wins_pace), json.dumps([player_points_wins_ratio]), json.dumps(max_points), json.dumps(max_wins)
             ))
 
+        if player_rank in tracked_ranks:
+            cursor.execute('SELECT * FROM borders WHERE rank = ?', (player_rank,))
+            border_result = cursor.fetchone()
+
+            if border_result:
+                wins = json.loads(border_result[1])
+                points = json.loads(border_result[2])
+                hours = json.loads(border_result[3])
+                points_pace = json.loads(border_result[4])
+                wins_pace = json.loads(border_result[5])
+                points_wins = json.loads(border_result[6])
+                max_points = json.loads(border_result[7])
+                max_wins = json.loads(border_result[8])
+
+                time_delta = elapsed_hours - hours[-1] if hours else 0
+
+                if time_delta > 0:
+                    wins.append(player_wins)
+                    points.append(player_points)
+                    hours.append(elapsed_hours)
+
+                    if len(hours) <= 5:
+                        points_pace.append(int(player_points / elapsed_hours))
+                        wins_pace.append(round(player_wins / elapsed_hours, 2))
+                    else:
+                        points_pace.append(abs(int((points[-1] - points[-5]) / (hours[-1] - hours[-5]))))
+                        wins_pace.append(abs(round((wins[-1] - wins[-5]) / (hours[-1] - hours[-5]), 2)))
+
+                    points_wins.append(player_points_wins_ratio)
+                    max_points.append(int(player_points + max(points_pace) * (left.total_seconds() / 3600)))
+                    max_wins.append(int(player_wins + max(wins_pace) * (left.total_seconds() / 3600)))
+
+                    cursor.execute('''
+                        UPDATE borders SET 
+                            wins = ?, points = ?, hour = ?, points_pace = ?, 
+                            wins_pace = ?, points_wins = ?, max_points = ?, max_wins = ?
+                        WHERE rank = ?
+                    ''', (
+                        json.dumps(wins), json.dumps(points), json.dumps(hours), json.dumps(points_pace),
+                        json.dumps(wins_pace), json.dumps(points_wins), json.dumps(max_points), json.dumps(max_wins), player_rank
+                    ))
+            else:
+                cursor.execute('''
+                    INSERT INTO borders (rank, wins, points, hour, points_pace, wins_pace, 
+                                         points_wins, max_points, max_wins) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    player_rank, json.dumps([player_wins]), json.dumps([player_points]), json.dumps([elapsed_hours]),
+                    json.dumps(points_pace), json.dumps(wins_pace), json.dumps([player_points_wins_ratio]),
+                    json.dumps(max_points), json.dumps(max_wins)
+                ))
+
     conn.commit()
     conn.close()
+
 
 
 #def test_update_data():

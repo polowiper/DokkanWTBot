@@ -1,8 +1,6 @@
 import discord 
 from discord import app_commands
 from discord.ext import commands
-import tkinter as tk
-from tkinter import ttk
 from datetime import datetime, timezone, timedelta
 from colorama import Fore, Style
 

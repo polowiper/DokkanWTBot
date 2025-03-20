@@ -28,8 +28,29 @@ class BulkCommand(commands.Cog):
             conn = load_db_data()
             player = find_player(conn, identifier)
             if player is None:
-                await ctx.followup.send(f'Player with name or ID "{identifier}" not found. (not in the top10 000 ???)')
-                return
+                class UserSelectMenu(discord.ui.Select):
+                    def __init__(self):
+                        options = [
+                            discord.SelectOption(label=row[0], description=f"name: {row[0]}") for row in rows
+                        ]
+                        super().__init__(
+                            placeholder="Select a user",
+                            min_values=1,
+                            max_values=1,
+                            options=options,
+                        )
+
+                    async def callback(self, interaction: Interaction):
+                        selected_user = self.values[0]
+                        await interaction.response.send_message(f"You selected: {selected_user}", ephemeral=True)
+
+                class UserSelectView(discord.ui.View):
+                    def __init__(self):
+                        super().__init__()
+                        self.add_item(UserSelectMenu())
+        
+                        #await ctx.followup.send(f'Player with name or ID "{identifier}" not found. (not in the top10 000 ???)')
+                        #return
             bulk_render([player], output_dir, ["points", "points_pace", "ranks", "wins"])
             image_path = os.path.join(output_dir, player["name"].replace('$', '\\$'), 'bulk_points_points_pace_ranks_wins.png')
             embed = discord.Embed(

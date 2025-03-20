@@ -44,7 +44,7 @@ class LeaderboardCommand(commands.Cog):
                 "points_wins": "FLOAT",
                 "ranks": "INTEGER"
             }
-            current_hour = round(elapsed.days * 24 + elapsed.seconds / 3600, 2)
+            current_hour = 71.26 if elapsed is None else round(elapsed.days * 24 + elapsed.seconds / 3600, 2) #71.26 is the standart wt duration time (i'm saying that because sometimes it's not 71.26 hours ex: The 55th edition that got extended)
             conn.create_function("strrev", 1, lambda s: s[::-1])
             query = f"""
                 SELECT name, 

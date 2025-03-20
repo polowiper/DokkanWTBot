@@ -3,7 +3,7 @@ import sqlite3
 import json
 import requests
 from datetime import datetime, timezone
-from config import WT_EDITION
+from config import WT_EDITION, USER_AGENT
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 output_dir = os.path.join(BASE_DIR, '../top100_data')
@@ -18,14 +18,39 @@ def load_db_data():
 
 def find_player(conn, identifier):
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM players WHERE id = ? OR name = ?", (identifier, identifier))
+
+    # Try to find an exact match by ID first
+    cursor.execute("SELECT * FROM players WHERE id = ?", (identifier,))
     row = cursor.fetchone()
 
-    if row is None:
-        return None
+    if row is not None:
+        return format_player(cursor, row)
+
+    # Try to find an exact match by name
+    cursor.execute("SELECT * FROM players WHERE name = ?", (identifier,))
+    exact_row = cursor.fetchone()
+
+    if exact_row is not None:
+        return format_player(cursor, exact_row)
+
+    # If no exact match, use LIKE for rough matching
+    search_pattern = "%" + "%".join(identifier) + "%"
+    cursor.execute("SELECT * FROM players WHERE name LIKE ?", (search_pattern,))
+    rows = cursor.fetchall()
+
+    if not rows:
+        return None  # No players found
+
+    return [format_player(cursor, row) for row in rows]
+
+
+def format_player(cursor, row, border=False):
     player = {description[0]: value for description, value in zip(cursor.description, row)}
 
-    json_fields = ["wins", "points", "ranks", "hour", "points_pace", "wins_pace", "points_wins", "max_points", "max_wins"]
+    json_fields = ["wins", "points", "hour", "points_pace", "wins_pace", "points_wins", "max_points", "max_wins"]
+
+    if not border:
+        json_fields.append("ranks")
 
     for field in json_fields:
         if field in player and player[field] is not None:
@@ -35,6 +60,36 @@ def find_player(conn, identifier):
                 print(f"Error decoding JSON for field {field}. Value: {player[field]}")
 
     return player
+
+
+def find_borders(conn, rank):
+    cursor = conn.cursor()
+    
+    if rank == "all":
+        cursor.execute("SELECT * FROM borders")
+        rows = cursor.fetchall()
+    else:
+        cursor.execute("SELECT * FROM borders WHERE rank = ?", (rank,))
+        rows = cursor.fetchall()
+
+    if not rows:
+        return []
+
+    players = []
+    json_fields = ["wins", "points", "hour", "points_pace", "wins_pace", "points_wins", "max_points", "max_wins"]
+
+    for row in rows:
+        player = {description[0]: value for description, value in zip(cursor.description, row)}
+        for field in json_fields:
+            if field in player and player[field] is not None:
+                try:
+                    player[field] = json.loads(player[field])
+                except json.JSONDecodeError:
+                    print(f"Error decoding JSON for field {field}. Value: {player[field]}")
+        players.append(player)
+
+    return players
+
 
 def find_gap(main_player, conn):
     last_hour = main_player["hour"][-1]
@@ -100,16 +155,23 @@ def time_data():
     if latest_fetch_path:
         with open(latest_fetch_path, 'r') as file:
             data = json.load(file)
-            ping = requests.get(f'https://dokkan.wiki/api/budokai/56') # API endpoint with necessary API_KEY
-            ping.raise_for_status()
-            start_end = ping.json()
-            start = datetime.utcfromtimestamp(start_end["start_at"]).replace(tzinfo=timezone.utc) 
-            end = datetime.utcfromtimestamp(start_end["end_at"]).replace(tzinfo=timezone.utc) 
-            update = datetime.utcfromtimestamp(data["rank1000_updated_at"]).replace(tzinfo=timezone.utc)
-            total = end - start
-            left = end - update
-            elapsed = update - start
-            return update, start, end, total, left, elapsed
+            try:
+                headers = {
+                    "User-Agent": USER_AGENT
+                }
+                ping = requests.get(f'https://dokkan.wiki/api/budokai/{WT_EDITION}', headers=headers) # API endpoint with necessary API_KEY
+                ping.raise_for_status()
+                start_end = ping.json()
+                start = datetime.utcfromtimestamp(start_end["start_at"]).replace(tzinfo=timezone.utc) 
+                end = datetime.utcfromtimestamp(start_end["end_at"]).replace(tzinfo=timezone.utc) 
+                update = datetime.utcfromtimestamp(data["rank1000_updated_at"]).replace(tzinfo=timezone.utc)
+                total = end - start
+                left = end - update
+                elapsed = update - start
+                return update, start, end, total, left, elapsed
+            except Exception as e:
+                return None, None, None, None, None, None
+
     else:
         #print("No fetch files found in the directory.")
         return None, None, None, None, None, None

@@ -3,27 +3,27 @@
 
   inputs.nixpkgs.url = "nixpkgs/nixpkgs-unstable";
 
-  outputs = { self, nixpkgs, ... }:
+  outputs = { nixpkgs, ... }:
   let
     system = "x86_64-linux";
     pkgs = import nixpkgs {
       inherit system;
     };
-  in {
+ in {
     devShells.${system}.default = pkgs.mkShell {
       packages = with pkgs; [
         python312
         python312Packages.matplotlib
-        python312Packages.discordpy
-        python312Packages.tkinter
-        python312Packages.sv-ttk
-        python312Packages.requests
-        python312Packages.colorama
         python312Packages.pytz
+        python312Packages.requests
+        python312Packages.discordpy
+        python312Packages.colorama
+        python312Packages.tkinter
       ];
       shellHook = ''
-        echo "Python devShell"
+        echo "Devshell for your dokkan bot for you nix chads <3"
       '';
     };
   };
 }
+
