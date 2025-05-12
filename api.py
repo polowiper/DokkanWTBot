@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 import sqlite3
 import json
 import requests
-
+from config import WT_EDITION, USER_AGENT
 app = Flask(__name__)
 DB_PATH = "database.db"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -34,11 +34,14 @@ def time_data():
     if latest_fetch_path:
         with open(latest_fetch_path, 'r') as file:
             data = json.load(file)
-            ping = requests.get(f'https://dokkan.wiki/api/budokai/56') # API endpoint with necessary API_KEY
+            headers = {
+                "User-Agent": USER_AGENT
+            }
+            ping = requests.get(f'https://dokkan.wiki/api/budokai/{WT_EDITION}', headers=headers) # API endpoint with necessary API_KEY
             ping.raise_for_status()
             start_end = ping.json()
-            start = datetime.utcfromtimestamp(start_end["start_at"]).replace(tzinfo=timezone.utc) 
-            end = datetime.utcfromtimestamp(start_end["end_at"]).replace(tzinfo=timezone.utc) 
+            start = datetime.utcfromtimestamp(start_end["start_at"]).replace(tzinfo=timezone.utc)
+            end = datetime.utcfromtimestamp(start_end["end_at"]).replace(tzinfo=timezone.utc)
             update = datetime.utcfromtimestamp(data["rank1000_updated_at"]).replace(tzinfo=timezone.utc)
             total = end - start
             left = end - update
@@ -82,8 +85,8 @@ def get_user_by_identifier(identifier):
     if not user:
         # Check if there are multiple users with the same name
         count = cursor.execute("SELECT COUNT(*) FROM players WHERE name = ?", (identifier,)).fetchone()[0]
-        
-        cursor.execute("SELECT * FROM players WHERE name = ?", (identifier,))        
+
+        cursor.execute("SELECT * FROM players WHERE name = ?", (identifier,))
         if count > 1:
             multiple_users = True
             user = cursor.fetchall()  # Return all the users with the same name

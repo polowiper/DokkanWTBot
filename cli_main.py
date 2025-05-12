@@ -1,20 +1,11 @@
-import discord 
-from discord import app_commands
+import discord
 from discord.ext import commands
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from colorama import Fore, Style
 
-import re
 import os
-import json
-import requests
-import asyncio
-import threading
-import time
-import typing
 
-import config 
-from render import render, bulk_render
+import config
 
 intents = discord.Intents.default()
 intents.message_content = True

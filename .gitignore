@@ -1,5 +1,6 @@
 fetches/*
 data.json
+final_data/*
 top100_data/*
 __pycache__/
 cogs/__pycache__/

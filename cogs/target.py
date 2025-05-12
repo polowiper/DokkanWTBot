@@ -1,77 +1,140 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
+from discord.ui import View, Select
 from cogs.utils import *
 from datetime import datetime, timedelta
-from render import render
+
+
+class PlayerSelectView(View):
+
+    def __init__(self, user, players, callback):
+        super().__init__(timeout=60)
+        self.user = user
+        self.callback = callback  # Function to call when a selection is made
+
+        select = Select(
+            placeholder="Select the correct player...",
+            options=[
+                discord.SelectOption(label=player["name"], value=str(index))
+                for index, player in enumerate(players)
+            ],
+            min_values=1,
+            max_values=1,
+        )
+        select.callback = self.select_callback
+        self.add_item(select)
+
+    async def select_callback(self, interaction: discord.Interaction):
+        if interaction.user.id != self.user.id:
+            await interaction.response.send_message(
+                "You're not allowed to select this.", ephemeral=True)
+            return
+
+        selected_index = int(interaction.data["values"][0])
+        await interaction.message.delete(
+        )  # Delete the select menu after selection
+        await self.callback(interaction, selected_index)
+
 
 class TargetCommand(commands.Cog):
+
     def __init__(self, bot):
         self.bot = bot
-        globals()["bot"] = bot
 
-    @app_commands.command(name="target", description="Show the pace needed to reach a goal.")
-    @app_commands.describe(goal="The goal you want to reach.", identifier="The identifier of the player you want to see the pace of.")
-    async def target(self, ctx, goal: str, identifier: str = None):
+    @app_commands.command(name="target",
+                          description="Show the pace needed to reach a goal.")
+    @app_commands.describe(
+        goal="The goal you want to reach.",
+        identifier="The identifier of the player you want to see the pace of.",
+        rank="If you wish to provide a rank instead of an identifier")
+    async def target(self,
+                     ctx,
+                     goal: str,
+                     identifier: str = None,
+                     rank: str = None):
         try:
             await ctx.response.defer()
-            # Test goal (500M --> 500000000)
-            num = {
-                "m": 1000000,
-                "b": 1000000000,
-                "k": 1000
-            }
-            goal = int(goal[:-1]) * num[goal[-1]]
+
+            # Convert goal (e.g., 850M -> 850000000)
+            num = {"m": 1000000, "b": 1000000000, "k": 1000}
+            if goal[-1].lower() in num:
+                goal = int(goal[:-1]) * num[goal[-1].lower()]
             try:
                 goal = int(goal)
-            except ValueError: # l'argument fourni n'est pas un nombre
-                await ctx.followup.send("Please provide a valid number as a goal.", ephemeral=True)
+            except ValueError:
+                await ctx.followup.send(
+                    "Please provide a valid number as a goal.", ephemeral=True)
                 return
+
+            # Load database and user data
             conn = load_db_data()
             discord_users = load_discord_users()
             update, start, end, total, left, elapsed = time_data()
-            if left == None:
+
+            if left is None:
                 await ctx.followup.send("No time left to do the calculations.")
                 return
+
             if identifier is None:
-                # cette ligne va raise un AttributeError si l'author n'est pas register, on modifie donc
-                try:
+                if rank is None:
                     user_id = str(ctx.user.id)
-                except AttributeError as e:
-                    # raise e # debug
-                    await ctx.followup.send("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (/link).")
-                    return
-                # tout va bien si on arrive là, on continue
-                identifier = discord_users.get(user_id)
-                if identifier is None: # si c'est None pour une raison ou pour une autre, même tarif c'est qu'il n'est pas register
-                    await ctx.send("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (/link).")
-                    return
-            if goal == -1 : # devrait être useless
-                await ctx.send("Please provide a goal")
-                return
+                    identifier = discord_users.get(user_id)
+                    if identifier is None:
+                        await ctx.followup.send(
+                            "You did not provide a Dokkan name/ID and your Discord account isn't linked to any. Please provide an identifier or link your Discord account (/link)."
+                        )
+                        return
+                else:
+                    identifier = find_rank(conn, rank)
+
             player = find_player(conn, identifier)
-            if player is None:
-                await ctx.send(f'Player with name or ID "{identifier}" not found. (not in the top10 000 ???)')
+
+            if not player:  # No player found
+                await ctx.followup.send(
+                    f'Player with name or ID "{identifier}" not found.')
                 return
-            wins_points_ratio = player["points_wins"][-1]
-            update, start, end, total, left, elapsed = time_data()
-            req_pace = (goal - player["points"][-1]) / (left.days * 24 + left.seconds / 3600)
-            req_wins_pace = req_pace / wins_points_ratio
-            # Check si le nombre de points est plus petit que goal
-            if player["points"][-1] >= goal: # plus grand, problème
-                addtt = "**:warning: You already have more points than your goal, thus the pace needed is 0.**\n\n"
-            else: # rien à signaler, circulez monsieur bonne journée 👮
-                addtt = ""
-            # await ctx.send(f"Based on your current points, your goal, the time left and your average points/wins ratio.\n You would need to have a pace of {req_wins_pace} wins/hour to be able to reach {goal} points")
-            embed = discord.Embed(
-                title=f"{player['name']}'s target pace",
-                color=discord.Color.green(),
-                description=f"{addtt}• You would need to have a pace of **{round(req_wins_pace, 2)}** wins/hour to be able to reach **{goal:,}** points.\n\n_Note : this is based on your current points, your goal, the time left and your average points/wins ratio._",
-            )
-            await ctx.followup.send(embed=embed)
+
+            if isinstance(
+                    player,
+                    list):  # Multiple players found, ask the user to pick one
+                view = PlayerSelectView(
+                    ctx.user, player, lambda i, idx: self.send_target_pace(
+                        ctx, goal, player[idx]))
+                await ctx.followup.send(
+                    "Multiple players found. Please select the correct one:",
+                    view=view)
+                return
+
+            # If it's a dict (single player), process it directly
+            await self.send_target_pace(ctx, goal, player)
+
         except Exception as e:
             self.bot.log_message(f"An error occurred: {e}")
-            await ctx.followup.send(f"Me no worki lol ask Polo 2 fix plz")
+            await ctx.followup.send("Me no worki lol, ask Polo to fix plz.")
+
+    async def send_target_pace(self, ctx, goal, player):
+        """Send the calculated pace to reach the target."""
+        wins_points_ratio = player["points_wins"][-1]
+        update, start, end, total, left, elapsed = time_data()
+
+        req_pace = (goal - player["points"][-1]) / (left.days * 24 +
+                                                    left.seconds / 3600)
+        req_wins_pace = req_pace / wins_points_ratio
+
+        if player["points"][-1] >= goal:
+            warning_text = "**:warning: You already have more points than your goal, so the required pace is 0.**\n\n"
+        else:
+            warning_text = ""
+
+        embed = discord.Embed(
+            title=f"{player['name']}'s target pace",
+            color=discord.Color.green(),
+            description=
+            f"{warning_text}• You would need to have a pace of **{round(req_wins_pace, 2)}** wins/hour to reach **{goal:,}** points.\n\n_Note: This is based on your current points, goal, remaining time, and average points/wins ratio._",
+        )
+        await ctx.followup.send(embed=embed)
+
 
 async def setup(bot):
     await bot.add_cog(TargetCommand(bot))

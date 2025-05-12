@@ -1,9 +1,4 @@
-being able to set goals
-being able to aadd in how many hours you won't be grinding 
+being able to aadd in how many hours you won't be grinding
 !addTarget and they show up on your !pace !points etc
-extrapolation function with a custom pace
-Give us the ability to set a start time, maybe So !seed 32 would give me the seed from hour 32 
-
-Spport the points_pace on the !highest command (I might as well support everything pepega)
-add threading so I can render multiple graphs in parallel
-Names will update when weirdos decide to change their name
+Give us the ability to set a start time, maybe So !seed 32 would give me the seed from hour 32
+Add buttons to change page on the leaderboard command

@@ -10,8 +10,11 @@ class RankingCommand(commands.Cog):
         globals()["bot"] = bot
 
     @app_commands.command(name='ranking', description="Show the ranking of a player.")
-    @app_commands.describe(identifier="The identifier of the player you want to see the ranking of.")
-    async def ranking(self, ctx, identifier: str = None):
+    @app_commands.describe(
+        identifier="The identifier of the player you want to see the ranking of.",
+        rank="If you wish to provided a raw rank instead of an identifier"
+        )
+    async def ranking(self, ctx, identifier: str = None, rank:str=None):
         try:
             await ctx.response.defer()
             conn = load_db_data()
@@ -22,12 +25,14 @@ class RankingCommand(commands.Cog):
                 update = datetime.combine(update, datetime.min.time())
 
             if identifier is None:
-                user_id = str(ctx.user.id)
-                identifier = discord_users.get(user_id)
-                if identifier is None:
-                    await ctx.followup.send("You did not provide a Dokkan name/ID and your Discord account isn't linked to any please provide an identifier or link your Discord account (/link)")
-                    return
-
+                if rank is None:
+                    user_id = str(ctx.user.id)
+                    identifier = discord_users.get(user_id)
+                    if identifier is None:
+                        await ctx.followup.send("You did not provide a Dokkan name/ID and your Discord account isn't linked to any. Please provide an identifier or link your Discord account (/link).")
+                        return
+                else:
+                    identifier = find_rank(conn, rank)
             players = find_player(conn, identifier)
 
             if not players:

@@ -23,7 +23,7 @@ def latest_fetch():
     return f"{output_dir}/fetch{i-1}.json" if os.path.exists(os.path.join(output_dir, f"fetch{i-1}.json")) else None
 
 
-def fetch_data(size: int=1000):
+def fetch_data(size: int=1000, edition: int=None):
     headers = {
         'x-apitoken': API_TOKEN,
         'User-Agent': USER_AGENT
@@ -63,7 +63,6 @@ while True:
                 save_json_to_file(fetch, f"fetch{config['LAST_FETCH']}.json")
                 updated_time = cond['rank1000_updated_at']
                 config['LAST_FETCH'] += 1
-                
                 with open('config.json', 'w') as file:
                     json.dump(config, file, indent=4)
 

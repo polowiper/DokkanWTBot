@@ -1,36 +1,43 @@
-import discord 
-from discord import app_commands
-from discord.ext import commands
-import tkinter as tk
-from tkinter import ttk
-from datetime import datetime, timezone, timedelta
-from colorama import Fore, Style
+"""
+THIS VERSION IS THE "UI" VERSION OF THE MAIN BOT PROCESS I PERSONALLY DON'T USE IT AND PREFER
+TO USE CLI_MAIN SO PLEASE REFER TO IT
 
-import re
-import os
-import json
-import requests
+
+THIS FILE HAS NOT BEEN UPDATED OR TOUCHED IN ANY WAY IN MONTHS AND IT WILL PROBABLY
+BE DELETED SOONER OR LATER
+"""
+
 import asyncio
+import json
+import os
+import re
 import threading
 import time
+import tkinter as tk
 import typing
+from datetime import datetime, timedelta, timezone
+from tkinter import ttk
 
+import discord
+import requests
+from colorama import Fore, Style
+from discord import app_commands
+from discord.ext import commands
 
-
-#My own imports
-import config 
-from render import render, bulk_render
+# My own imports
+import config
+from render import bulk_render, render
 
 intents = discord.Intents.default()
 intents.message_content = True
-bot = commands.Bot(command_prefix='!', intents = intents)
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 bot.start_time = time.time()
 bot.commands_executed = 0
 bot.servers = []
 
 
-#Ui init
+# Ui init
 window = tk.Tk()
 window.title("Ludicolo admin panel ong fr")
 
@@ -41,14 +48,14 @@ bot_running = False
 # =============================================================================================================================================
 
 
-#Actual UI stuff :nerd:
+# Actual UI stuff :nerd:
 
 # ===== Tkinter UI Initialization =====
 tab_control = ttk.Notebook(window)
 bot_control_tab = ttk.Frame(tab_control)
 tab_control.add(bot_control_tab, text="Ludicolo management")
 
-# Bot Metrics 
+# Bot Metrics
 bot_metrics_tab = ttk.Frame(tab_control)
 tab_control.add(bot_metrics_tab, text="Ludicolo Metrics")
 
@@ -61,6 +68,7 @@ tab_control.pack(expand=1, fill="both")
 bot_control_frame = ttk.LabelFrame(bot_control_tab, text="Bot Control Panel")
 bot_control_frame.pack(fill="x", padx=10, pady=5)
 
+
 def start_bot():
     global bot_thread, bot_running
     if not bot_running:
@@ -70,6 +78,7 @@ def start_bot():
         bot_thread = threading.Thread(target=run_discord_bot)
         bot_thread.start()
 
+
 def stop_bot():
     global bot_running
     if bot_running:
@@ -77,6 +86,7 @@ def stop_bot():
         status_label.config(text="Ludicolo is DEAD DEAD AS HELL DUDE", fg="red")
         bot_running = False
         asyncio.run_coroutine_threadsafe(bot.close(), bot.loop)
+
 
 def resync_commands():
     global bot_running
@@ -88,6 +98,7 @@ def resync_commands():
             log_message("Commands resynced.")
         except Exception as e:
             log_message(f"Error resyncing commands: {e}")
+
 
 start_button = tk.Button(bot_control_frame, text="Start Bot", command=start_bot)
 stop_button = tk.Button(bot_control_frame, text="Stop Bot", command=stop_bot)
@@ -107,8 +118,10 @@ log_scroll.pack(side="right", fill="y")
 log_text.config(yscrollcommand=log_scroll.set)
 log_scroll.config(command=log_text.yview)
 
+
 def clear_logs():
     log_text.delete(1.0, tk.END)
+
 
 clear_log_button = tk.Button(log_frame, text="Clear Logs", command=clear_logs)
 clear_log_button.pack(pady=5)
@@ -126,7 +139,9 @@ servers_label.grid(row=1, column=0, padx=5, pady=5)
 # Server List
 server_listbox_frame = ttk.Frame(metrics_frame)
 server_listbox_frame.grid(row=2, column=0, columnspan=3, padx=5, pady=5)
-server_listbox = tk.Listbox(server_listbox_frame, height=10, width=60, bg="#1e1e1e", fg="#ffffff")
+server_listbox = tk.Listbox(
+    server_listbox_frame, height=10, width=60, bg="#1e1e1e", fg="#ffffff"
+)
 server_listbox.pack(side="left", fill="y")
 server_scroll = tk.Scrollbar(server_listbox_frame)
 server_scroll.pack(side="right", fill="y")
@@ -141,13 +156,17 @@ commands_frame.pack(fill="both", expand=True, padx=10, pady=5)
 commands_listbox_frame = ttk.Frame(commands_frame)
 commands_listbox_frame.pack(fill="both", expand=True)
 
-commands_listbox = tk.Listbox(commands_listbox_frame, height=15, width=60, bg="#1e1e1e", fg="#ffffff")
+commands_listbox = tk.Listbox(
+    commands_listbox_frame, height=15, width=60, bg="#1e1e1e", fg="#ffffff"
+)
 commands_listbox.pack(side="left", fill="y")
 
 commands_scroll = tk.Scrollbar(commands_listbox_frame)
 commands_scroll.pack(side="right", fill="y")
 
-resync_commands_button = ttk.Button(commands_frame, text="Resync commands", command=resync_commands)
+resync_commands_button = ttk.Button(
+    commands_frame, text="Resync commands", command=resync_commands
+)
 resync_commands_button.pack(side="right")
 
 commands_listbox.config(yscrollcommand=commands_scroll.set)
@@ -167,10 +186,11 @@ def run_discord_bot():
     except Exception as e:
         log_message(f"{Fore.RED}Error running bot: {Style.RESET_ALL}{e}")
 
-color_code_pattern = re.compile(r'(\x1b\[\d+;?\d*m)')
+
+color_code_pattern = re.compile(r"(\x1b\[\d+;?\d*m)")
 
 
-#That's super ugly huh? You're welcome !
+# That's super ugly huh? You're welcome !
 log_text.tag_configure("black", foreground="black")
 log_text.tag_configure("red", foreground="red")
 log_text.tag_configure("green", foreground="green2")
@@ -189,8 +209,9 @@ color_map = {
     "{Fore.MAGENTA}": "magenta",
     "{Fore.CYAN}": "cyan",
     "{Fore.WHITE}": "white",
-    "{Style.RESET_ALL}": "reset"
+    "{Style.RESET_ALL}": "reset",
 }
+
 
 def log_message(message):
     tag = "reset"
@@ -199,30 +220,36 @@ def log_message(message):
     for keyword, color_tag in color_map.items():
         if keyword in message:
             message = message.replace(keyword, f"|||{color_tag}|||")
-    
+
     parts = message.split("|||")
-    
+
     for part in parts:
         if part in color_map.values():
             tag = part
         else:
             log_text.insert(tk.END, part, tag)
-    
+
     log_text.insert(tk.END, "\n")
     log_text.see(tk.END)
 
-bot.log_message = log_message #Global export of my own logs to make them available for the cogs
+
+bot.log_message = (
+    log_message  # Global export of my own logs to make them available for the cogs
+)
 
 
 def update_metrics():
     if bot.is_ready():
         uptime = time.time() - bot.start_time
         uptime_label.config(text=f"Uptime: {int(uptime)} seconds")
-        commands_executed_label.config(text=f"Commands Executed: {bot.commands_executed}")
-        
+        commands_executed_label.config(
+            text=f"Commands Executed: {bot.commands_executed}"
+        )
+
         server_listbox.delete(0, tk.END)
         for server in bot.servers:
             server_listbox.insert(tk.END, server)
+
 
 def update_commands_list():
     commands_listbox.delete(0, tk.END)
@@ -232,8 +259,7 @@ def update_commands_list():
                 commands_listbox.insert(tk.END, f"{filename[:-3]}")
     except Exception as e:
         log_message(f"Error while updating commands list: {e}")
-    #For now only the help command is listed here, I'll prob move all the discord commands to cogs to make the code cleaner but also for them to be listed here.
-
+    # For now only the help command is listed here, I'll prob move all the discord commands to cogs to make the code cleaner but also for them to be listed here.
 
 
 """
@@ -243,33 +269,38 @@ This is just a large chunk of functions I'll need later on so I'll just define t
 """
 
 
-
-
 @bot.event
 async def on_ready():
     bot.start_time = time.time()
     bot.servers = [guild.name for guild in bot.guilds]
     update_metrics()
-    log_message(f'Bot connected as {bot.user.name}')
+    log_message(f"Bot connected as {bot.user.name}")
     try:
         for filename in os.listdir("./cogs"):
             if filename.endswith(".py") and filename != "utils.py":
                 await bot.load_extension(f"cogs.{filename[:-3]}")
-                log_message(f'Loaded {filename}')
-        log_message(f'Loaded Everything, ready to go!')
+                log_message(f"Loaded {filename}")
+        log_message(f"Loaded Everything, ready to go!")
     except Exception as e:
         log_message(f"Failed to load cog {filename}: {e}")
     try:
-        log_message(f"Syncing commands")#Yeah I know looking at the resync_commands function this implementation is fucking ugly but having to await them, call them in async function specifically etc is a fucking pain so fuck this
+        log_message(
+            f"Syncing commands"
+        )  # Yeah I know looking at the resync_commands function this implementation is fucking ugly but having to await them, call them in async function specifically etc is a fucking pain so fuck this
         await bot.tree.sync()
-        log_message("Synced commands succesfully")
+        log_message("Synced commands successfully")
     except Exception as e:
         log_message(f"Error syncing commands {e}")
+
+
 @bot.event
 async def on_app_command_completion(interaction, command):
-    bot.commands_executed += 1 #Yeah I tracked the number of commands ran bcs smh the bot kept crashing but apparently it was due tue the host so that part is prob useless nowadays
-    log_message(f'Command executed: {command.name} succesfuli') #Dw the typo is intentionnal COZ FUNIIII
+    bot.commands_executed += 1  # Yeah I tracked the number of commands ran bcs smh the bot kept crashing but apparently it was due tue the host so that part is prob useless nowadays
+    log_message(
+        f"Command executed: {command.name} succesfuli"
+    )  # Dw the typo is intentional COZ FUNIIII
     update_metrics()
+
 
 update_commands_list()
 

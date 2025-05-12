@@ -4,44 +4,60 @@ import json
 import requests
 from datetime import datetime, timezone
 from config import WT_EDITION, USER_AGENT
-
+LOCKED = "Database if locked chef you cannot access it"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 output_dir = os.path.join(BASE_DIR, '../top100_data')
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
-
 
 def load_db_data():
     path = os.path.join(BASE_DIR, '../database.db')
     conn = sqlite3.connect(path)
     return conn
 
-def find_player(conn, identifier):
+def find_rank(conn, rank):
     cursor = conn.cursor()
-
-    # Try to find an exact match by ID first
-    cursor.execute("SELECT * FROM players WHERE id = ?", (identifier,))
+    update, start, end, total, left, elapsed = time_data()
+    elapsed_hours = round(elapsed.total_seconds() / 3600, 2)
+    conn.create_function("strrev", 1, lambda s: s[::-1])
+    cursor.execute("""
+        SELECT id FROM players WHERE
+        CAST(SUBSTR(hour, LENGTH(hour) - INSTR(strrev(hour), ',') + 2, LENGTH(hour)) AS FLOAT) = ?
+            AND
+        CAST(SUBSTR(ranks, LENGTH(ranks) - INSTR(strrev(ranks), ',') + 2, LENGTH(ranks)) AS INTEGER) = ?
+    """, (elapsed_hours, rank))
     row = cursor.fetchone()
-
     if row is not None:
-        return format_player(cursor, row)
+        return row[0]
+    if not row:
+        return None
 
-    # Try to find an exact match by name
-    cursor.execute("SELECT * FROM players WHERE name = ?", (identifier,))
-    exact_row = cursor.fetchone()
+def find_player(conn, identifier):
+    try:
+      cursor = conn.cursor()
 
-    if exact_row is not None:
-        return format_player(cursor, exact_row)
+      # Try searching by ID
+      cursor.execute("SELECT * FROM players WHERE id = ?", (identifier,))
+      row = cursor.fetchone()
+      if row:
+          return format_player(cursor, row)
 
-    # If no exact match, use LIKE for rough matching
-    search_pattern = "%" + "%".join(identifier) + "%"
-    cursor.execute("SELECT * FROM players WHERE name LIKE ?", (search_pattern,))
-    rows = cursor.fetchall()
+      # Try exact name match
+      cursor.execute("SELECT * FROM players WHERE name = ?", (identifier,))
+      exact_rows = cursor.fetchall()
+      if exact_rows:
+          return [format_player(cursor, r) for r in exact_rows] if len(exact_rows) > 1 else format_player(cursor, exact_rows[0])
 
-    if not rows:
-        return None  # No players found
+      # Try partial name match
+      search_pattern = f"%{identifier}%"
+      cursor.execute("SELECT * FROM players WHERE name LIKE ?", (search_pattern,))
+      rows = cursor.fetchall()
+      if rows:
+          return [format_player(cursor, r) for r in rows] if len(rows) > 1 else format_player(cursor, rows[0])
 
-    return [format_player(cursor, row) for row in rows]
+      return None  # No players found
+    except sqlite3.OperationalError:
+      return LOCKED
 
 
 def format_player(cursor, row, border=False):
@@ -64,7 +80,7 @@ def format_player(cursor, row, border=False):
 
 def find_borders(conn, rank):
     cursor = conn.cursor()
-    
+
     if rank == "all":
         cursor.execute("SELECT * FROM borders")
         rows = cursor.fetchall()
@@ -108,7 +124,7 @@ def find_gap(main_player, conn):
     else:
         bottom_id = row[0]
         bottom = find_player(conn, bottom_id)
-    
+
     cursor.execute("""
         SELECT id FROM players WHERE
         CAST(SUBSTR(hour, LENGTH(hour) - INSTR(strrev(hour), ',') + 2, LENGTH(hour)) AS FLOAT) = ?
@@ -121,7 +137,7 @@ def find_gap(main_player, conn):
     else:
         top_id = row[0]
         top = find_player(conn, top_id)
-    
+
     return top, bottom
 
 
@@ -162,8 +178,8 @@ def time_data():
                 ping = requests.get(f'https://dokkan.wiki/api/budokai/{WT_EDITION}', headers=headers) # API endpoint with necessary API_KEY
                 ping.raise_for_status()
                 start_end = ping.json()
-                start = datetime.utcfromtimestamp(start_end["start_at"]).replace(tzinfo=timezone.utc) 
-                end = datetime.utcfromtimestamp(start_end["end_at"]).replace(tzinfo=timezone.utc) 
+                start = datetime.utcfromtimestamp(start_end["start_at"]).replace(tzinfo=timezone.utc)
+                end = datetime.utcfromtimestamp(start_end["end_at"]).replace(tzinfo=timezone.utc)
                 update = datetime.utcfromtimestamp(data["rank1000_updated_at"]).replace(tzinfo=timezone.utc)
                 total = end - start
                 left = end - update

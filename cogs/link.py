@@ -43,8 +43,8 @@ class LinkCommand(commands.Cog):
                 await interaction.message.delete()
 
             view = discord.ui.View()
-            button_validate = discord.ui.Button(style=discord.ButtonStyle.green, emoji="✅", label="Oui")
-            button_cancel = discord.ui.Button(style=discord.ButtonStyle.red, emoji="❌", label="Non")
+            button_validate = discord.ui.Button(style=discord.ButtonStyle.green, emoji="✅", label="Yes")
+            button_cancel = discord.ui.Button(style=discord.ButtonStyle.red, emoji="❌", label="No")
             button_validate.callback = callback_yesconf
             button_cancel.callback = callback_noconf
             view.add_item(button_validate)
