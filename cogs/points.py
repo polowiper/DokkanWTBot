@@ -1,10 +1,12 @@
-import discord
-from discord.ext import commands
-from discord import app_commands
-from cogs.utils import *
-from datetime import datetime
-from render import render
 import typing
+from datetime import datetime
+
+import discord
+from discord import app_commands
+from discord.ext import commands
+from render import render
+
+from cogs.utils import *
 
 
 class PlayerSelectView(discord.ui.View):
@@ -16,27 +18,31 @@ class PlayerSelectView(discord.ui.View):
         self.borders = borders
         self.callback = callback
 
-        select = discord.ui.Select(placeholder="Select a player...",
-                                   options=[
-                                       discord.SelectOption(
-                                           label=player["name"],
-                                           value=str(index))
-                                       for index, player in enumerate(players)
-                                   ])
+        select = discord.ui.Select(
+            placeholder="Select a player...",
+            options=[
+                discord.SelectOption(
+                    label=f"#{player["ranks"][-1]}:{player["name"]}", value=str(index)
+                )
+                for index, player in enumerate(players)
+            ],
+        )
         select.callback = self.select_callback
         self.add_item(select)
 
     async def select_callback(self, interaction: discord.Interaction):
         if interaction.user.id != self.ctx.user.id:
             await interaction.response.send_message(
-                "You're not allowed to select this.", ephemeral=True)
+                "You're not allowed to select this.", ephemeral=True
+            )
             return
 
         selected_index = int(interaction.data["values"][0])
         selected_player = self.callback(selected_index)
         await interaction.message.delete()
-        await self.ctx.cog.process_player(self.ctx, selected_player,
-                                          self.update, self.borders)
+        await self.ctx.cog.process_player(
+            self.ctx, selected_player, self.update, self.borders
+        )
 
 
 class PointsCommand(commands.Cog):
@@ -45,26 +51,23 @@ class PointsCommand(commands.Cog):
         self.bot = bot
 
     async def autocomplete_borders(
-            self, interaction: discord.Interaction,
-            current: str) -> typing.List[app_commands.Choice[str]]:
+        self, interaction: discord.Interaction, current: str
+    ) -> typing.List[app_commands.Choice[str]]:
         return [
             app_commands.Choice(name="Yes", value="1"),
-            app_commands.Choice(name="No", value="0")
+            app_commands.Choice(name="No", value="0"),
         ]
 
-    @app_commands.command(name='points',
-                          description="Show the points of a player.")
+    @app_commands.command(name="points", description="Show the points of a player.")
     @app_commands.describe(
-        identifier=
-        "The identifier of the player you want to see the points of.",
+        identifier="The identifier of the player you want to see the points of.",
         rank="If you wish to search a player by rank instead.",
-        borders="Whether or not you want to see borders on the graph")
+        borders="Whether or not you want to see borders on the graph",
+    )
     @app_commands.autocomplete(borders=autocomplete_borders)
-    async def points(self,
-                     ctx,
-                     identifier: str = None,
-                     rank: str = None,
-                     borders: str = None):
+    async def points(
+        self, ctx, identifier: str = None, rank: str = None, borders: str = None
+    ):
         try:
             await ctx.response.defer()
             conn = load_db_data()
@@ -101,10 +104,12 @@ class PointsCommand(commands.Cog):
                     )
                     return
 
-                view = PlayerSelectView(players, ctx, update, borders,
-                                        lambda idx: players[idx])
+                view = PlayerSelectView(
+                    players, ctx, update, borders, lambda idx: players[idx]
+                )
                 await ctx.followup.send(
-                    "Multiple players found. Please select one:", view=view)
+                    "Multiple players found. Please select one:", view=view
+                )
                 return
 
             player = players if isinstance(players, dict) else players[0]
@@ -126,29 +131,30 @@ class PointsCommand(commands.Cog):
         if points_data:
             render([player], output_dir, "points", border=borders)
             current_points = points_data[-1]
-            image_path = os.path.join(output_dir,
-                                      player["name"].replace('$', '\\$'),
-                                      'points.png')
+            image_path = os.path.join(
+                output_dir, player["name"].replace("$", "\\$"), "points.png"
+            )
 
             embed = discord.Embed(
                 title=f"{player['name']}'s current points",
                 description=f"The current points are **{current_points:,}**.",
-                color=discord.Color.red())
+                color=discord.Color.red(),
+            )
             if os.path.exists(image_path):
                 file = discord.File(image_path, filename="points.png")
                 embed.set_image(url=f"attachment://points.png")
                 embed.add_field(
                     name="Updated at",
-                    value=
-                    f"<t:{int(update.timestamp())}:f>    (<t:{int(update.timestamp())}:R>)",
-                    inline=False)
+                    value=f"<t:{int(update.timestamp())}:f>    (<t:{int(update.timestamp())}:R>)",
+                    inline=False,
+                )
                 await ctx.followup.send(file=file, embed=embed)
             else:
                 embed.add_field(
                     name="Updated at",
-                    value=
-                    f"<t:{int(update.timestamp())}:f>    (<t:{int(update.timestamp())}:R>)",
-                    inline=False)
+                    value=f"<t:{int(update.timestamp())}:f>    (<t:{int(update.timestamp())}:R>)",
+                    inline=False,
+                )
                 await ctx.followup.send(embed=embed)
         else:
             await ctx.followup.send(

@@ -89,7 +89,9 @@ class MaxCommand(commands.Cog):
                 select = discord.ui.Select(
                     placeholder="Select the correct player",
                     options=[
-                        discord.SelectOption(label=p["name"], value=p["name"])
+                        discord.SelectOption(
+                            label=f"#{p["ranks"][-1]}:{p["name"]}", value=p["name"]
+                        )
                         for p in players
                     ],
                 )

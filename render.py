@@ -1,10 +1,11 @@
 import json
-import os
-import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator
-from matplotlib.animation import FuncAnimation, PillowWriter
-import numpy as np
 import math
+import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.animation import FuncAnimation, PillowWriter
+from matplotlib.ticker import MultipleLocator
 
 # If you really wanna bear all of this good luck lmao
 
@@ -153,23 +154,30 @@ def plot_and_save(
 # I initially wanted to modify the plot_and_save function to make this but I figured by the way it was made that it would basically require a complete rewrite for it to support it so I made this instead
 
 
-def bulk_render(players, output_dir, bulk_params, multiple=False, animate=False):
+def bulk_render(players, output_dir, bulk_params, multiple=False):
     n_plots = len(bulk_params)
-    n_cols = math.ceil(math.sqrt(n_plots)) #HAHAHA I HAVE NO IDEA WHY I TOOK THAT I THINK THAT'S A SORT OF APPROXIMATION THAT GIVES IT A GOOD ENOUGH RATIO
+    n_cols = math.ceil(math.sqrt(n_plots))
     n_rows = math.ceil(n_plots / n_cols)
 
     if multiple:
         fig, axs = plt.subplots(n_rows, n_cols, figsize=(12 * n_cols, 6 * n_rows))
         axs = axs.flatten()
         for i, param in enumerate(bulk_params):
-            lines = []
             for player in players:
                 player_name = player["name"].replace("$", "\\$")
-                (line,) = axs[i].plot(player["hour"], player[param], label=player_name)
-                lines.append(line)
+                if param == "ranks":
+                    axs[i].step(
+                        player["hour"], player[param], where="mid", label=player_name
+                    )
+                    axs[i].invert_yaxis()
+                else:
+                    axs[i].plot(player["hour"], player[param], label=player_name)
             axs[i].set_xlabel("Hours")
             axs[i].set_ylabel(param.capitalize())
-            axs[i].set_title(f"{param.capitalize()} by Hour")
+            title = f"{param.capitalize()} by Hour"
+            if param == "ranks":
+                title = "Ranks by Hour"
+            axs[i].set_title(title)
             axs[i].grid(True)
             axs[i].legend(loc="center left", bbox_to_anchor=(1, 0.5))
             axs[i].text(
@@ -184,20 +192,8 @@ def bulk_render(players, output_dir, bulk_params, multiple=False, animate=False)
         for j in range(n_plots, n_rows * n_cols):
             axs[j].axis("off")
         plt.tight_layout()
-        if animate:
-
-            def update(num):
-                for i, param in enumerate(bulk_params):
-                    for line, player in zip(lines, players):
-                        line.set_data(player["hour"][:num], player[param][:num])
-                return lines
-
-            ani = FuncAnimation(fig, update, frames=len(players[0]["hour"]), blit=True)
-            output_path = os.path.join(output_dir, f"bulk_{'_'.join(bulk_params)}.gif")
-            ani.save(output_path, writer=PillowWriter(fps=10))
-        else:
-            output_path = os.path.join(output_dir, f"bulk_{'_'.join(bulk_params)}.png")
-            plt.savefig(output_path, bbox_inches="tight")
+        output_path = os.path.join(output_dir, f"bulk_{'_'.join(bulk_params)}.png")
+        plt.savefig(output_path, bbox_inches="tight")
         plt.close()
     else:
         for player in players:
@@ -207,13 +203,18 @@ def bulk_render(players, output_dir, bulk_params, multiple=False, animate=False)
                 os.makedirs(player_dir)
             fig, axs = plt.subplots(n_rows, n_cols, figsize=(12 * n_cols, 6 * n_rows))
             axs = axs.flatten()
-            lines = []
             for i, param in enumerate(bulk_params):
-                (line,) = axs[i].plot(player["hour"], player[param])
-                lines.append(line)
+                if param == "ranks":
+                    axs[i].step(player["hour"], player[param], where="mid")
+                    axs[i].invert_yaxis()
+                else:
+                    axs[i].plot(player["hour"], player[param])
                 axs[i].set_xlabel("Hours")
                 axs[i].set_ylabel(param.capitalize())
-                axs[i].set_title(f"{player_name}'s {param.capitalize()} by Hour")
+                title = f"{player_name}'s {param.capitalize()} by Hour"
+                if param == "ranks":
+                    title = f"{player_name}'s Ranks by Hour"
+                axs[i].set_title(title)
                 axs[i].grid(True)
                 axs[i].text(
                     0,
@@ -227,25 +228,8 @@ def bulk_render(players, output_dir, bulk_params, multiple=False, animate=False)
             for j in range(n_plots, n_rows * n_cols):
                 axs[j].axis("off")
             plt.tight_layout()
-            if animate:
-                for i, param in enumerate(bulk_params):
-                    lines[i].set_data([], [])
-
-                def update(num):
-                    for i, param in enumerate(bulk_params):
-                        lines[i].set_data(player["hour"][:num], player[param][:num])
-                    return lines
-
-                ani = FuncAnimation(fig, update, frames=len(player["hour"]), blit=True)
-                output_path = os.path.join(
-                    player_dir, f"bulk_{'_'.join(bulk_params)}.gif"
-                )
-                ani.save(output_path, writer=PillowWriter(fps=10))
-            else:
-                output_path = os.path.join(
-                    player_dir, f"bulk_{'_'.join(bulk_params)}.png"
-                )
-                plt.savefig(output_path, bbox_inches="tight")
+            output_path = os.path.join(player_dir, f"bulk_{'_'.join(bulk_params)}.png")
+            plt.savefig(output_path, bbox_inches="tight")
             plt.close()
 
 

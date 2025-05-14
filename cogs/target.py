@@ -1,9 +1,11 @@
-import discord
-from discord.ext import commands
-from discord import app_commands
-from discord.ui import View, Select
-from cogs.utils import *
 from datetime import datetime, timedelta
+
+import discord
+from discord import app_commands
+from discord.ext import commands
+from discord.ui import Select, View
+
+from cogs.utils import *
 
 
 class PlayerSelectView(View):
@@ -16,7 +18,9 @@ class PlayerSelectView(View):
         select = Select(
             placeholder="Select the correct player...",
             options=[
-                discord.SelectOption(label=player["name"], value=str(index))
+                discord.SelectOption(
+                    label=f"#{player["ranks"][-1]}:{player["name"]}", value=str(index)
+                )
                 for index, player in enumerate(players)
             ],
             min_values=1,
@@ -28,12 +32,12 @@ class PlayerSelectView(View):
     async def select_callback(self, interaction: discord.Interaction):
         if interaction.user.id != self.user.id:
             await interaction.response.send_message(
-                "You're not allowed to select this.", ephemeral=True)
+                "You're not allowed to select this.", ephemeral=True
+            )
             return
 
         selected_index = int(interaction.data["values"][0])
-        await interaction.message.delete(
-        )  # Delete the select menu after selection
+        await interaction.message.delete()  # Delete the select menu after selection
         await self.callback(interaction, selected_index)
 
 
@@ -42,17 +46,15 @@ class TargetCommand(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="target",
-                          description="Show the pace needed to reach a goal.")
+    @app_commands.command(
+        name="target", description="Show the pace needed to reach a goal."
+    )
     @app_commands.describe(
         goal="The goal you want to reach.",
         identifier="The identifier of the player you want to see the pace of.",
-        rank="If you wish to provide a rank instead of an identifier")
-    async def target(self,
-                     ctx,
-                     goal: str,
-                     identifier: str = None,
-                     rank: str = None):
+        rank="If you wish to provide a rank instead of an identifier",
+    )
+    async def target(self, ctx, goal: str, identifier: str = None, rank: str = None):
         try:
             await ctx.response.defer()
 
@@ -64,7 +66,8 @@ class TargetCommand(commands.Cog):
                 goal = int(goal)
             except ValueError:
                 await ctx.followup.send(
-                    "Please provide a valid number as a goal.", ephemeral=True)
+                    "Please provide a valid number as a goal.", ephemeral=True
+                )
                 return
 
             # Load database and user data
@@ -92,18 +95,21 @@ class TargetCommand(commands.Cog):
 
             if not player:  # No player found
                 await ctx.followup.send(
-                    f'Player with name or ID "{identifier}" not found.')
+                    f'Player with name or ID "{identifier}" not found.'
+                )
                 return
 
             if isinstance(
-                    player,
-                    list):  # Multiple players found, ask the user to pick one
+                player, list
+            ):  # Multiple players found, ask the user to pick one
                 view = PlayerSelectView(
-                    ctx.user, player, lambda i, idx: self.send_target_pace(
-                        ctx, goal, player[idx]))
+                    ctx.user,
+                    player,
+                    lambda i, idx: self.send_target_pace(ctx, goal, player[idx]),
+                )
                 await ctx.followup.send(
-                    "Multiple players found. Please select the correct one:",
-                    view=view)
+                    "Multiple players found. Please select the correct one:", view=view
+                )
                 return
 
             # If it's a dict (single player), process it directly
@@ -118,8 +124,9 @@ class TargetCommand(commands.Cog):
         wins_points_ratio = player["points_wins"][-1]
         update, start, end, total, left, elapsed = time_data()
 
-        req_pace = (goal - player["points"][-1]) / (left.days * 24 +
-                                                    left.seconds / 3600)
+        req_pace = (goal - player["points"][-1]) / (
+            left.days * 24 + left.seconds / 3600
+        )
         req_wins_pace = req_pace / wins_points_ratio
 
         if player["points"][-1] >= goal:
@@ -130,8 +137,7 @@ class TargetCommand(commands.Cog):
         embed = discord.Embed(
             title=f"{player['name']}'s target pace",
             color=discord.Color.green(),
-            description=
-            f"{warning_text}• You would need to have a pace of **{round(req_wins_pace, 2)}** wins/hour to reach **{goal:,}** points.\n\n_Note: This is based on your current points, goal, remaining time, and average points/wins ratio._",
+            description=f"{warning_text}• You would need to have a pace of **{round(req_wins_pace, 2)}** wins/hour to reach **{goal:,}** points.\n\n_Note: This is based on your current points, goal, remaining time, and average points/wins ratio._",
         )
         await ctx.followup.send(embed=embed)
 

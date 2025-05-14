@@ -19,7 +19,9 @@ class PlayerSelect(discord.ui.Select):
         self.update = update
 
         options = [
-            discord.SelectOption(label=player["name"], value=str(index))
+            discord.SelectOption(
+                label=f"#{player["ranks"][-1]}:{player["name"]}", value=str(index)
+            )
             for index, player in enumerate(players)
         ]
 
