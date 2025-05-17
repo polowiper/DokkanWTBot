@@ -186,7 +186,7 @@ class PaceCommand(commands.Cog):
                 render([player], output_dir, pace_type, border=borders)
                 latest_pace = pace_data[-1]
                 image_path = os.path.join(
-                    output_dir, player["name"], f"{pace_type}.png"
+                    output_dir, player["name"].replace("$", "\\$"), f"{pace_type}.png"
                 )
 
                 embed = discord.Embed(
@@ -214,7 +214,7 @@ class PaceCommand(commands.Cog):
                 await ctx.followup.send(f"No data available for {pace_type}.")
         except Exception as e:
             bot.self.log_message(f"An error occurred: {e}")
-            await ctx.followup.send("Me no worki lol ask Polo 2 fix plz")
+            await ctx.followup.send("Me no worki lol ask Polo (@polowiper) 2 fix plz")
 
 
 async def setup(bot):

@@ -120,7 +120,7 @@ class LeaderboardCommand(commands.Cog):
             await ctx.followup.send(embed=embed)
         except Exception as e:
             self.bot.log_message(f"An error occurred: {e}")
-            await ctx.followup.send(f"Me no worki lol ask Polo 2 fix plz")
+            await ctx.followup.send(f"Me no worki lol ask Polo (@polowiper) 2 fix plz")
 
 
 async def setup(bot):

@@ -76,13 +76,16 @@ class WinsCommand(commands.Cog):
             borders = find_borders(conn, 100) if borders == "1" else None
 
             if identifier is None:
-                user_id = str(ctx.user.id)
-                identifier = discord_users.get(user_id)
-                if identifier is None:
-                    await ctx.followup.send(
-                        "You did not provide a Dokkan name/ID and your Discord account isn't linked to any. Please provide an identifier or link your Discord account (/link)."
-                    )
-                    return
+                if rank is None:
+                    user_id = str(ctx.user.id)
+                    identifier = discord_users.get(user_id)
+                    if identifier is None:
+                        await ctx.followup.send(
+                            "You did not provide a Dokkan name/ID and your Discord account isn't linked to any. Please provide an identifier or link your Discord account (/link)."
+                        )
+                        return
+                else:
+                    identifier = find_rank(conn, rank)
 
             players = find_player(conn, identifier)
 
@@ -109,7 +112,7 @@ class WinsCommand(commands.Cog):
 
         except Exception as e:
             self.bot.log_message(f"An error occurred: {e}")
-            await ctx.followup.send("Me no worki lol ask Polo 2 fix plz")
+            await ctx.followup.send("Me no worki lol ask Polo (@polowiper) 2 fix plz")
 
 
 async def process_wins(ctx, player, borders, update, interaction=None):
@@ -124,7 +127,9 @@ async def process_wins(ctx, player, borders, update, interaction=None):
 
     render([player], output_dir, "wins", border=borders)
     current_wins = wins_data[-1]
-    image_path = os.path.join(output_dir, player["name"], "wins.png")
+    image_path = os.path.join(
+        output_dir, player["name"].replace("$", "\\$"), "wins.png"
+    )
 
     embed = discord.Embed(
         title=f"{player['name']}'s Current Wins",

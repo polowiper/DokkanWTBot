@@ -1,8 +1,10 @@
-import discord
-from discord.ext import commands
-from discord import app_commands
-from cogs.utils import *
 from datetime import datetime
+
+import discord
+from discord import app_commands
+from discord.ext import commands
+
+from cogs.utils import *
 
 
 class GapCommand(commands.Cog):
@@ -13,13 +15,11 @@ class GapCommand(commands.Cog):
 
     @app_commands.command(
         name="gap",
-        description=
-        "Show the gap between the player and the player above and below (if any)."
+        description="Show the gap between the player and the player above and below (if any).",
     )
     @app_commands.describe(
         identifier="The identifier of the player you want to see the gap of.",
-        rank=
-        "If you wish to search the gap of a player with its rank instead of its name"
+        rank="If you wish to search the gap of a player with its rank instead of its name",
     )
     async def gap(self, ctx, identifier: str = None, rank: str = None):
         try:
@@ -59,7 +59,8 @@ class GapCommand(commands.Cog):
 
                 await ctx.followup.send(
                     "Multiple players found. Please select one:",
-                    view=PlayerSelectView(players, ctx, update, conn))
+                    view=PlayerSelectView(players, ctx, update, conn),
+                )
                 return
 
             player = players if isinstance(players, dict) else players[0]
@@ -67,7 +68,7 @@ class GapCommand(commands.Cog):
 
         except Exception as e:
             self.bot.log_message(f"An error occurred: {e}")
-            await ctx.followup.send("Me no worki lol ask Polo 2 fix plz")
+            await ctx.followup.send("Me no worki lol ask Polo (@polowiper) 2 fix plz")
 
 
 class PlayerSelect(discord.ui.Select):
@@ -101,44 +102,54 @@ async def process_gap(ctx, player, update, conn):
     embed = discord.Embed(
         title=f"{player['name']} - Points Gap",
         description=f"Points gap comparison for {player['name']}",
-        color=0x00b0f4)
-    pro_gap = abs(pro['points'][-1] - player['points'][-1]) if pro else 1e99
-    noob_gap = abs(noob['points'][-1] - player['points'][-1]) if noob else 1e99
+        color=0x00B0F4,
+    )
+    pro_gap = abs(pro["points"][-1] - player["points"][-1]) if pro else 1e99
+    noob_gap = abs(noob["points"][-1] - player["points"][-1]) if noob else 1e99
 
     if pro:
-        delta_pro = pro_gap - abs(pro['points'][-2] -
-                                  player['points'][-2]) if len(
-                                      player['points']) >= 2 and len(
-                                          pro['points']) >= 2 else 0
-        estimated_time_pro = int(
-            (pro_gap) / (abs(delta_pro) * 4 / 60)) if delta_pro != 0 else 0
-        enplus = f"\n|--> `around {estimated_time_pro} minutes needed` --> (<t:{int(update.timestamp() + estimated_time_pro * 60)}:R>)" if delta_pro <= 0 else f"\n:warning: {pro['name']} is farming faster than you! Skill issue, take this L "
+        delta_pro = (
+            pro_gap - abs(pro["points"][-2] - player["points"][-2])
+            if len(player["points"]) >= 2 and len(pro["points"]) >= 2
+            else 0
+        )
+        estimated_time_pro = (
+            int((pro_gap) / (abs(delta_pro) * 4 / 60)) if delta_pro != 0 else 0
+        )
+        enplus = (
+            f"\n|--> `around {estimated_time_pro} minutes needed` --> (<t:{int(update.timestamp() + estimated_time_pro * 60)}:R>)"
+            if delta_pro <= 0
+            else f"\n:warning: {pro['name']} is farming faster than you! Skill issue, take this L "
+        )
         embed.add_field(
             name=f" ⬆️ - {pro['ranks'][-1]} - {pro['name']}",
-            value=
-            f"• Points: **{pro['points'][-1]:,}**\n•   Gap:  **{pro_gap:,} ({'+' if delta_pro > 0 else ''}{delta_pro:,})**{enplus}",
-            inline=False)
+            value=f"• Points: **{pro['points'][-1]:,}**\n•   Gap:  **{pro_gap:,} ({'+' if delta_pro > 0 else ''}{delta_pro:,})**{enplus}",
+            inline=False,
+        )
 
-    embed.add_field(name=f" ▶️ - {player['ranks'][-1]} - {player['name']}",
-                    value=f"Points: **{player['points'][-1]:,}**",
-                    inline=False)
+    embed.add_field(
+        name=f" ▶️ - {player['ranks'][-1]} - {player['name']}",
+        value=f"Points: **{player['points'][-1]:,}**",
+        inline=False,
+    )
 
     if noob:
-        delta_noob = noob_gap - abs(noob['points'][-2] -
-                                    player['points'][-2]) if len(
-                                        player['points']) >= 2 and len(
-                                            noob['points']) >= 2 else 0
+        delta_noob = (
+            noob_gap - abs(noob["points"][-2] - player["points"][-2])
+            if len(player["points"]) >= 2 and len(noob["points"]) >= 2
+            else 0
+        )
         embed.add_field(
             name=f" ⬇️ - {noob['ranks'][-1]} - {noob['name']}",
-            value=
-            f"Points: **{noob['points'][-1]:,}**\nGap: **{noob_gap:,} ({'+' if delta_noob > 0 else ''}{delta_noob:,})**",
-            inline=False)
+            value=f"Points: **{noob['points'][-1]:,}**\nGap: **{noob_gap:,} ({'+' if delta_noob > 0 else ''}{delta_noob:,})**",
+            inline=False,
+        )
 
     embed.add_field(
         name="Updated at",
-        value=
-        f"<t:{int(update.timestamp())}:f>    (<t:{int(update.timestamp())}:R>)",
-        inline=False)
+        value=f"<t:{int(update.timestamp())}:f>    (<t:{int(update.timestamp())}:R>)",
+        inline=False,
+    )
     await ctx.followup.send(embed=embed)
 
 

@@ -33,7 +33,9 @@ class PlayerSelect(discord.ui.Select):
         if seed_data:
             render([player], output_dir, "points_wins", border=self.borders)
             current_seed = seed_data[-1]
-            image_path = os.path.join(output_dir, player["name"], "points_wins.png")
+            image_path = os.path.join(
+                output_dir, player["name"].replace("$", "\\$"), "points_wins.png"
+            )
 
             embed = discord.Embed(
                 title=f"{player['name']}'s Seed Performance",
@@ -165,7 +167,7 @@ class SeedCommand(commands.Cog):
                 )
         except Exception as e:
             self.bot.log_message(f"An error occurred: {e}")
-            await ctx.followup.send("Me no worki lol ask Polo 2 fix plz")
+            await ctx.followup.send("Me no worki lol ask Polo (@polowiper) 2 fix plz")
 
 
 async def setup(bot):

@@ -118,9 +118,16 @@ class BulkCommand(commands.Cog):
     @app_commands.describe(
         identifier="the identifier of the player you want to see the bulk info of.",
         params="the parameters you want to include in the bulk info (e.g., points, wins). you can select multiple.",
+        rank="If you wish to provide a rank instead of an identifier",
     )
     @app_commands.autocomplete(params=bulk_param_autocomplete)
-    async def bulk(self, ctx, identifier: str = None, params: str = None):
+    async def bulk(
+        self,
+        ctx,
+        identifier: str = None,
+        params: str = "wins_pace,wins,ranks,points_wins",
+        rank: str = None,
+    ):
         try:
             await ctx.response.defer()
             discord_users = load_discord_users()
@@ -129,16 +136,19 @@ class BulkCommand(commands.Cog):
                 update = datetime.fromisoformat("2005-03-30").replace(
                     hour=0, minute=0, second=0, microsecond=0
                 )
-
-            if identifier is None:
-                user_id = str(ctx.user.id)
-                identifier = discord_users.get(user_id)
-                if identifier is None:
-                    await ctx.followup.send(
-                        "you did not provide a dokkan name/id and your discord account isn't linked to any please provide an identifier or link your discord account (!link)"
-                    )
-                    return
             conn = load_db_data()
+            if identifier is None:
+                if rank is None:
+                    user_id = str(ctx.user.id)
+                    identifier = discord_users.get(user_id)
+                    if identifier is None:
+                        await ctx.followup.send(
+                            "You did not provide a Dokkan name/ID and your Discord account isn't linked to any. Please provide an identifier or link your Discord account (/link)."
+                        )
+                        return
+                else:
+                    identifier = find_rank(conn, rank)
+
             players = find_player(conn, identifier)
 
             if not players:
@@ -165,7 +175,7 @@ class BulkCommand(commands.Cog):
                     return
             else:
                 await ctx.followup.send(
-                    "please specify at least one parameter to display."
+                    "please specify at least two parameters to display."
                 )
                 return
 

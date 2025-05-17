@@ -117,7 +117,7 @@ class PointsCommand(commands.Cog):
 
         except Exception as e:
             self.bot.log_message(f"An error occurred: {e}")
-            await ctx.followup.send("Me no worki lol ask Polo 2 fix plz")
+            await ctx.followup.send("Me no worki lol ask Polo (@polowiper) 2 fix plz")
 
     async def process_player(self, ctx, player, update, borders=None):
         conn = load_db_data()

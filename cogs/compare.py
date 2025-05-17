@@ -95,7 +95,7 @@ class CompareCommand(commands.Cog):
 
         except Exception as e:
             self.bot.log_message(f"An error occurred: {e}")
-            await ctx.followup.send(f"Me no worki lol ask Polo 2 fix plz")
+            await ctx.followup.send(f"Me no worki lol ask Polo (@polowiper) 2 fix plz")
 
     async def resolve_next_user(self, ctx, type, update):
         """Resolve multiple matches one at a time."""
